@@ -1,12 +1,15 @@
 package com.hhalpha.daniel.homehunter12;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 
 import android.support.v4.app.FragmentActivity;
@@ -42,6 +45,7 @@ public class RegisterActivity extends FragmentActivity {
     TextView textViewFB;
     AccessToken accessToken;
     Profile profile;
+    SharedPreferences preferences;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -72,6 +76,19 @@ public class RegisterActivity extends FragmentActivity {
                 }catch (Exception e){
                     e.printStackTrace();
                 }
+                preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putBoolean("registered",true);
+                editor.putString("loginMethod","FB");
+                editor.putString("profileName",profile.getName());
+                editor.apply();
+                Intent i = new Intent(RegisterActivity.this, MainActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putBoolean("registered",preferences.getBoolean("registered",false));
+                bundle.putString("loginMethod",preferences.getString("loginMethod",""));
+                bundle.putString("loginMethod",preferences.getString("profileName",""));
+                i.putExtra("bundle",bundle);
+                startActivity(i);
             }
 
             @Override
