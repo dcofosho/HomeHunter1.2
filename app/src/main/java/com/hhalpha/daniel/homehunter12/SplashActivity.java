@@ -13,8 +13,8 @@ import android.util.Log;
  */
 public class SplashActivity extends Activity {
     Boolean registered;
-    String profileName;
-    String loginMethod;
+    String profileName, loginMethod, email;
+    Integer salary;
     Bundle bundle;
     Intent i;
     /** Duration of wait **/
@@ -29,17 +29,42 @@ public class SplashActivity extends Activity {
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         try{
             Log.v("_dan",preferences.getAll().toString());
-            registered=preferences.getBoolean("registered",false);
-            profileName=preferences.getString("profileName","");
-            loginMethod=preferences.getString("loginMethod","");
-            bundle.putBoolean("registered",registered);
-            bundle.putString("loginMethod",loginMethod);
-            bundle.putString("profileName",profileName);
+            email=preferences.getString("email","");
+            salary=preferences.getInt("salary",0);
+            bundle.putString("email",email);
+            bundle.putInt("salary",salary);
+            registered = preferences.getBoolean("registered", false);
+            profileName = preferences.getString("profileName", "");
+            loginMethod = preferences.getString("loginMethod", "");
+            bundle.putBoolean("registered", registered);
+            bundle.putString("loginMethod", loginMethod);
+            bundle.putString("profileName", profileName);
             i = new Intent(SplashActivity.this, MainActivity.class);
             i.putExtra("bundle",bundle);
         }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        if((email.isEmpty()||email.equals(""))||salary==0){
+            try {
+                Log.v("_dan", preferences.getAll().toString());
+                registered = preferences.getBoolean("registered", false);
+                profileName = preferences.getString("profileName", "");
+                loginMethod = preferences.getString("loginMethod", "");
+                bundle.putBoolean("registered", registered);
+                bundle.putString("loginMethod", loginMethod);
+                bundle.putString("profileName", profileName);
+                i = new Intent(SplashActivity.this, RegisterActivity2.class);
+                i.putExtra("bundle", bundle);
+            }catch (Exception ex){
+                ex.printStackTrace();
+            }
+
+        }
+        if(registered.equals(false)||profileName.isEmpty()||profileName.equals("")||loginMethod.isEmpty()||loginMethod.equals("")){
             i = new Intent(SplashActivity.this, RegisterActivity.class);
         }
+
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -49,33 +74,6 @@ public class SplashActivity extends Activity {
                 SplashActivity.this.finish();
             }
         }, SPLASH_DISPLAY_LENGTH);
-//        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-//        if(preferences.contains("registered")) {
-//        /* New Handler to start the Menu-Activity
-//         * and close this Splash-Screen after some seconds.*/
-//            new Handler().postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                /* Create an Intent that will start the Menu-Activity. */
-//                    Intent mainIntent = new Intent(SplashActivity.this, MainActivity.class);
-//                    Bundle bundle = new Bundle();
-//                    bundle.putString("loginMethod",preferences.getString("loginMethod",""));
-//                    bundle.putString("profileName",preferences.getString("profileName",""));
-//                    SplashActivity.this.startActivity(mainIntent);
-//                    SplashActivity.this.finish();
-//                }
-//            }, SPLASH_DISPLAY_LENGTH);
-//        }else{
-////            preferences.edit().putBoolean("registered", true);
-//            new Handler().postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                /* Create an Intent that will start the Menu-Activity. */
-//                    Intent mainIntent = new Intent(SplashActivity.this, RegisterActivity.class);
-//                    SplashActivity.this.startActivity(mainIntent);
-//                    SplashActivity.this.finish();
-//                }
-//            }, SPLASH_DISPLAY_LENGTH);
-//        }
+
     }
 }
