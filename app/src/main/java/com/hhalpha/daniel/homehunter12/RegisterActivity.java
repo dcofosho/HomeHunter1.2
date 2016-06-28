@@ -1,6 +1,7 @@
 package com.hhalpha.daniel.homehunter12;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -37,6 +39,7 @@ public class RegisterActivity extends FragmentActivity {
     LoginButton loginButton;
     CallbackManager callbackManager;
     TextView textViewFB;
+    AccessToken accessToken;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -57,71 +60,44 @@ public class RegisterActivity extends FragmentActivity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                textViewFB.setText("Success!");
+//                textViewFB.setText("Success!");
+                Log.v("_dan","success");
             }
 
             @Override
             public void onCancel() {
-                textViewFB.setText("Cancel");
+//                textViewFB.setText("Cancel");
+                Log.v("_dan","cancel");
             }
 
             @Override
             public void onError(FacebookException exception) {
-                textViewFB.setText("Issue logging in to Facebook");
+//                textViewFB.setText("Issue logging in to Facebook");
+                Log.v("_dan","error");
             }
+
         });
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
 //        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        try{
+            printHash();
+        }catch (Exception e){
+             e.printStackTrace();
+        }
+        try {
+            accessToken = AccessToken.getCurrentAccessToken();
+            Log.v("_dan", accessToken.getUserId());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
-
-//    @Override
-//    public void onStart() {
-//        super.onStart();
-//        try {
-//            // ATTENTION: This was auto-generated to implement the App Indexing API.
-//            // See https://g.co/AppIndexing/AndroidStudio for more information.
-//            client.connect();
-//            Action viewAction = Action.newAction(
-//                    Action.TYPE_VIEW, // TODO: choose an action type.
-//                    "Register Page", // TODO: Define a title for the content shown.
-//                    // TODO: If you have web page content that matches this app activity's content,
-//                    // make sure this auto-generated web page URL is correct.
-//                    // Otherwise, set the URL to null.
-//                    Uri.parse(null),
-//                    // TODO: Make sure this auto-generated app URL is correct.
-//                    Uri.parse("com.hhalpha.daniel.homehunter12")
-//            );
-//            AppIndex.AppIndexApi.start(client, viewAction);
-//        }catch (Exception e){
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    @Override
-//    public void onStop() {
-//        super.onStop();
-//        try {
-//            // ATTENTION: This was auto-generated to implement the App Indexing API.
-//            // See https://g.co/AppIndexing/AndroidStudio for more information.
-//            Action viewAction = Action.newAction(
-//                    Action.TYPE_VIEW, // TODO: choose an action type.
-//                    "Register Page", // TODO: Define a title for the content shown.
-//                    // TODO: If you have web page content that matches this app activity's content,
-//                    // make sure this auto-generated web page URL is correct.
-//                    // Otherwise, set the URL to null.
-////                Uri.parse("http://host/path"),
-//                    Uri.parse(null),
-//                    // TODO: Make sure this auto-generated app URL is correct.
-//                    Uri.parse("com.hhalpha.daniel.homehunter12")
-//            );
-//            AppIndex.AppIndexApi.end(client, viewAction);
-//            client.disconnect();
-//        }catch(Exception e){
-//            e.printStackTrace();
-//        }
-//    }
+    @Override
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
 
     public void printHash(){
         // code to print out the key hash
