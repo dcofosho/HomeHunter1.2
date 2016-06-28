@@ -82,7 +82,7 @@ public class RegisterActivity extends FragmentActivity {
                 editor.putString("loginMethod","FB");
                 editor.putString("profileName",profile.getName());
                 editor.apply();
-                Intent i = new Intent(RegisterActivity.this, MainActivity.class);
+                Intent i = new Intent(RegisterActivity.this, RegisterActivity2.class);
                 Bundle bundle = new Bundle();
                 bundle.putBoolean("registered",preferences.getBoolean("registered",false));
                 bundle.putString("loginMethod",preferences.getString("loginMethod",""));

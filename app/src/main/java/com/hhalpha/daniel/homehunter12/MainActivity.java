@@ -1,10 +1,12 @@
 package com.hhalpha.daniel.homehunter12;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 /**
@@ -41,5 +43,16 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
 
+    }
+    public void clear (View v){
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("registered",false);
+        editor.putString("loginMethod","");
+        editor.putString("profileName","");
+        editor.putString("email","");
+        editor.putInt("salary",0);
+        editor.apply();
+        Intent i = new Intent(MainActivity.this,SplashActivity.class);
+        startActivity(i);
     }
 }
