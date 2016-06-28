@@ -25,8 +25,16 @@
         android:layout_height="wrap_content"
         android:inputType="textEmailAddress"
         android:ems="10"
-        android:id="@+id/editText"
+        android:id="@+id/editTextEmail"
         android:hint="Please enter your email"
+        android:layout_gravity="center_horizontal" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Submit"
+        android:id="@+id/reg2Button"
+        android:onClick="submit"
         android:layout_gravity="center_horizontal" />
 
 </LinearLayout>
