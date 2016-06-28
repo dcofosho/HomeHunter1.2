@@ -22,6 +22,7 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.Profile;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -40,6 +41,7 @@ public class RegisterActivity extends FragmentActivity {
     CallbackManager callbackManager;
     TextView textViewFB;
     AccessToken accessToken;
+    Profile profile;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -62,6 +64,14 @@ public class RegisterActivity extends FragmentActivity {
             public void onSuccess(LoginResult loginResult) {
 //                textViewFB.setText("Success!");
                 Log.v("_dan","success");
+                try {
+//            accessToken = AccessToken.getCurrentAccessToken();
+//            Log.v("_dan", accessToken.getUserId());
+                    profile = Profile.getCurrentProfile();
+                    Log.v("_dan",profile.getName());
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
 
             @Override
@@ -85,12 +95,7 @@ public class RegisterActivity extends FragmentActivity {
         }catch (Exception e){
              e.printStackTrace();
         }
-        try {
-            accessToken = AccessToken.getCurrentAccessToken();
-            Log.v("_dan", accessToken.getUserId());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+
     }
 
     @Override
