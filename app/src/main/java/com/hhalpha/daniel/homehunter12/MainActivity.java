@@ -9,6 +9,23 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.mobileconnectors.cognito.CognitoSyncManager;
+import com.amazonaws.mobileconnectors.cognito.Dataset;
+import com.amazonaws.mobileconnectors.cognito.DefaultSyncCallback;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.s3.AmazonS3;
+import com.facebook.AccessToken;
+import com.facebook.FacebookSdk;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by Daniel on 6/24/2016.
  */
@@ -17,6 +34,7 @@ public class MainActivity extends Activity {
     Boolean registered;
     TextView textViewMain;
     SharedPreferences preferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +62,8 @@ public class MainActivity extends Activity {
         }
 
     }
+
+
     public void clear (View v){
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("registered",false);

@@ -20,6 +20,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.mobileconnectors.cognito.CognitoSyncManager;
+import com.amazonaws.mobileconnectors.cognito.Dataset;
+import com.amazonaws.mobileconnectors.cognito.DefaultSyncCallback;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.s3.AmazonS3;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -35,6 +45,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Daniel on 6/24/2016.
@@ -51,7 +64,12 @@ public class RegisterActivity extends FragmentActivity {
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
-
+    private CognitoCachingCredentialsProvider credentialsProvider;
+    CognitoSyncManager syncClient;
+    AmazonS3 s3;
+    TransferUtility transferUtility;
+    DynamoDBMapper mapper;
+    AmazonDynamoDB dynamoDB;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,11 +87,14 @@ public class RegisterActivity extends FragmentActivity {
 //                textViewFB.setText("Success!");
                 Log.v("_dan","success");
                 try {
-//            accessToken = AccessToken.getCurrentAccessToken();
-//            Log.v("_dan", accessToken.getUserId());
                     profile = Profile.getCurrentProfile();
                     Log.v("_dan",profile.getName());
                 }catch (Exception e){
+                    e.printStackTrace();
+                }
+                try{
+                    cognito();
+                }catch(Exception e){
                     e.printStackTrace();
                 }
                 preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -88,6 +109,7 @@ public class RegisterActivity extends FragmentActivity {
                 bundle.putString("loginMethod",preferences.getString("loginMethod",""));
                 bundle.putString("loginMethod",preferences.getString("profileName",""));
                 i.putExtra("bundle",bundle);
+
                 startActivity(i);
             }
 
@@ -114,7 +136,41 @@ public class RegisterActivity extends FragmentActivity {
         }
 
     }
+    public void cognito(){
+        credentialsProvider = new CognitoCachingCredentialsProvider(
+                getApplicationContext(),
+                "us-east-1:f297743b-8f2b-4874-8bef-3ee300d8b4a3", // Identity Pool ID
+                Regions.US_EAST_1 // Region
+        );
+        Map<String, String> logins = new HashMap<String, String>();
+        logins.put("graph.facebook.com", AccessToken.getCurrentAccessToken().getToken());
+        credentialsProvider.setLogins(logins);
+        syncClient = new CognitoSyncManager(
+                getApplicationContext(),
+                Regions.US_EAST_1, // Region
+                credentialsProvider);
+        CognitoSyncManager syncClient = new CognitoSyncManager(
+                getApplicationContext(),
+                Regions.US_EAST_1, // Region
+                credentialsProvider);
+        AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
+        mapper = new DynamoDBMapper(ddbClient);
+//        Log.v("_dan customroleARN", credentialsProvider.getCustomRoleArn());
+        try {
+// Create a record in a dataset and synchronize with the server
+            Dataset dataset = syncClient.openOrCreateDataset("myDataset");
+            dataset.put("_dan customroleARN", credentialsProvider.getCustomRoleArn());
 
+            dataset.synchronize(new DefaultSyncCallback() {
+                @Override
+                public void onSuccess(Dataset dataset, List newRecords) {
+                    //Your handler code here
+                }
+            });
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
