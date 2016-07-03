@@ -3,37 +3,32 @@ package com.hhalpha.daniel.homehunter12;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
 
-import com.amazonaws.auth.CognitoCachingCredentialsProvider;
-import com.amazonaws.mobileconnectors.cognito.CognitoSyncManager;
-import com.amazonaws.mobileconnectors.cognito.Dataset;
-import com.amazonaws.mobileconnectors.cognito.DefaultSyncCallback;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.s3.AmazonS3;
-import com.facebook.AccessToken;
-import com.facebook.FacebookSdk;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Daniel on 6/24/2016.
  */
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements OnMapReadyCallback {
     String profileName, loginMethod,email, salary;
     Boolean registered;
     TextView textViewMain;
     SharedPreferences preferences;
+    Double lat, lng;
+
+    Location myLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +55,9 @@ public class MainActivity extends Activity {
         }catch(Exception e){
             e.printStackTrace();
         }
+        lat=0.0;
+        lng=0.0;
+        setupMap();
 
     }
 
@@ -75,4 +73,53 @@ public class MainActivity extends Activity {
         Intent i = new Intent(MainActivity.this,SplashActivity.class);
         startActivity(i);
     }
+    public void setupMap(){
+        MapFragment mapFragment = (MapFragment) getFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        try {
+            // Enable MyLocation Layer of Google Map
+            map.setMyLocationEnabled(true);
+        }catch (SecurityException e){
+            e.printStackTrace();
+        }
+        // Get LocationManager object from System Service LOCATION_SERVICE
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        // Create a criteria object to retrieve provider
+        Criteria criteria = new Criteria();
+
+        // Get the name of the best provider
+        String provider = locationManager.getBestProvider(criteria, true);
+        try {
+            // Get Current Location
+            myLocation = locationManager.getLastKnownLocation(provider);
+        }catch (SecurityException e){
+            e.printStackTrace();
+        }
+        //set map type
+        map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+
+        // Get latitude of the current location
+        double latitude = myLocation.getLatitude();
+
+        // Get longitude of the current location
+        double longitude = myLocation.getLongitude();
+
+        // Create a LatLng object for the current location
+        LatLng latLng = new LatLng(latitude, longitude);
+
+        try {
+            map.setMyLocationEnabled(true);
+        }catch (SecurityException e){
+            Log.v("_dan mapsec", e.getMessage());
+        }
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+
+    }
+
 }
