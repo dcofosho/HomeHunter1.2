@@ -92,11 +92,7 @@ public class RegisterActivity extends FragmentActivity {
                 }catch (Exception e){
                     e.printStackTrace();
                 }
-                try{
-                    cognito();
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
+
                 preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putBoolean("registered",true);
@@ -132,45 +128,11 @@ public class RegisterActivity extends FragmentActivity {
         try{
             printHash();
         }catch (Exception e){
-             e.printStackTrace();
-        }
-
-    }
-    public void cognito(){
-        credentialsProvider = new CognitoCachingCredentialsProvider(
-                getApplicationContext(),
-                "us-east-1:f297743b-8f2b-4874-8bef-3ee300d8b4a3", // Identity Pool ID
-                Regions.US_EAST_1 // Region
-        );
-        Map<String, String> logins = new HashMap<String, String>();
-        logins.put("graph.facebook.com", AccessToken.getCurrentAccessToken().getToken());
-        credentialsProvider.setLogins(logins);
-        syncClient = new CognitoSyncManager(
-                getApplicationContext(),
-                Regions.US_EAST_1, // Region
-                credentialsProvider);
-        CognitoSyncManager syncClient = new CognitoSyncManager(
-                getApplicationContext(),
-                Regions.US_EAST_1, // Region
-                credentialsProvider);
-        AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
-        mapper = new DynamoDBMapper(ddbClient);
-//        Log.v("_dan customroleARN", credentialsProvider.getCustomRoleArn());
-        try {
-// Create a record in a dataset and synchronize with the server
-            Dataset dataset = syncClient.openOrCreateDataset("myDataset");
-            dataset.put("_dan customroleARN", credentialsProvider.getCustomRoleArn());
-
-            dataset.synchronize(new DefaultSyncCallback() {
-                @Override
-                public void onSuccess(Dataset dataset, List newRecords) {
-                    //Your handler code here
-                }
-            });
-        }catch (Exception e){
             e.printStackTrace();
         }
+
     }
+
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
