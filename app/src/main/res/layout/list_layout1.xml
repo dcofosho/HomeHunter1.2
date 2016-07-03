@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/imageViewProp"
+        android:layout_gravity="center"
+
+        />
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="100dp"
+        android:text="Large Text"
+        android:id="@+id/textViewProp"
+        android:layout_gravity="center"
+        android:textColor="#a7a7a7"
+
+        />
+</LinearLayout>
