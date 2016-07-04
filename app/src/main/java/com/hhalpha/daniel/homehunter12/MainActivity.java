@@ -101,7 +101,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                     Log.v("_dan click",metadataArrayList.toString());
                     Bundle bundle=new Bundle();
                     Intent i = new Intent(MainActivity.this, PropertyActivity.class);
-                    bundle.putStringArrayList("arrayList",new ArrayList<String>(Arrays.asList(metadataArrayList.toString().split(","))));
+                    bundle.putStringArrayList("arrayList",new ArrayList<String>(Arrays.asList(metadataArrayList.get(position).toString().split(","))));
                     bundle.putBoolean("firstTime",false);
                     i.putExtra("bundle",bundle);
                     startActivity(i);

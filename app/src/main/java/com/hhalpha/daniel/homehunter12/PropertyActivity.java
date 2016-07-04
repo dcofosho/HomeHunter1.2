@@ -152,7 +152,7 @@ public class PropertyActivity extends Activity implements OnMapReadyCallback {
 
             //call setUserMetadata on our ObjectMetadata object, passing it our map
             myObjectMetadata.setUserMetadata(userMetadata);
-
+            Log.v("_dan",address);
             new latLngFromAddressTask().execute(address);
 
 
