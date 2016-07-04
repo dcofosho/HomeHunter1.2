@@ -117,7 +117,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
             Bundle bundle = getIntent().getBundleExtra("bundle");
             email=bundle.getString("email","");
 
-            salary=bundle.getString("salary","");
+//            salary=bundle.getString("salary","");
             Log.v("_dan",email+salary);
 
         }catch(Exception e){
@@ -179,24 +179,28 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         }catch (SecurityException e){
             e.printStackTrace();
         }
-        //set map type
-        map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        try {
+            //set map type
+            map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
 
-        // Get latitude of the current location
-        double latitude = myLocation.getLatitude();
+            // Get latitude of the current location
+            lat = myLocation.getLatitude();
 
-        // Get longitude of the current location
-        double longitude = myLocation.getLongitude();
+            // Get longitude of the current location
+            lng = myLocation.getLongitude();
 
-        // Create a LatLng object for the current location
-        LatLng latLng = new LatLng(latitude, longitude);
-
+            // Create a LatLng object for the current location
+            LatLng latLng = new LatLng(lat, lng);
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         try {
             map.setMyLocationEnabled(true);
         }catch (SecurityException e){
             Log.v("_dan mapsec", e.getMessage());
         }
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+
 
     }
     public class retrieveTask extends AsyncTask<String,Integer,ArrayList<String>> {
