@@ -44,7 +44,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Go"
-
+        android:onClick= "goToTextLocation"
         android:id="@+id/locationButton" />
 
 
@@ -52,6 +52,14 @@
 
 </LinearLayout>
 </ScrollView>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Loading properties near you..."
+        android:id="@+id/textViewLoading"
+        android:layout_gravity="center_horizontal"
+        />
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

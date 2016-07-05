@@ -1,6 +1,7 @@
 package com.hhalpha.daniel.homehunter12;
 //imports
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -15,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -41,10 +43,20 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
 
 
 /**
@@ -53,13 +65,13 @@ import java.util.Map;
 public class MainActivity extends Activity implements OnMapReadyCallback {
     //declarations
     String profileName, loginMethod,email;
-    Boolean registered;
-    TextView textViewMain;
+    Boolean registered,usingGps;
+    TextView textViewMain, textViewLoading;
     SharedPreferences preferences;
     Double lat, lng;
     int salary;
     Location myLocation;
-
+    EditText editTextLocation;
     CustomListViewAdapter adapter;
     ArrayList<PropertyListEntry> propertyListEntries;
     ListView listView;
@@ -73,11 +85,13 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        usingGps=true;
         //assignments
         textViewMain=(TextView) findViewById(R.id.textViewMain);
+        textViewLoading=(TextView) findViewById(R.id.textViewLoading);
         preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         addresses=new ArrayList<String>();
-
+        editTextLocation=(EditText) findViewById(R.id.editTextLocation);
         //FB credentials for S3
         FacebookSdk.sdkInitialize(getApplicationContext());
         credentialsProvider = new CognitoCachingCredentialsProvider(
@@ -173,31 +187,39 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         }catch (SecurityException e){
             e.printStackTrace();
         }
-        // Get LocationManager object from System Service LOCATION_SERVICE
-        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if(usingGps) {
+            // Get LocationManager object from System Service LOCATION_SERVICE
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        // Create a criteria object to retrieve provider
-        Criteria criteria = new Criteria();
+            // Create a criteria object to retrieve provider
+            Criteria criteria = new Criteria();
 
-        // Get the name of the best provider
-        String provider = locationManager.getBestProvider(criteria, true);
-        try {
-            // Get Current Location
-            myLocation = locationManager.getLastKnownLocation(provider);
-        }catch (SecurityException e){
-            e.printStackTrace();
+            // Get the name of the best provider
+            String provider = locationManager.getBestProvider(criteria, true);
+            try {
+                // Get Current Location
+                myLocation = locationManager.getLastKnownLocation(provider);
+            } catch (SecurityException e) {
+                e.printStackTrace();
+            }
+            try {
+                //set map type
+                map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+
+                // Get latitude of the current location
+                lat = myLocation.getLatitude();
+
+                // Get longitude of the current location
+                lng = myLocation.getLongitude();
+
+                // Create a LatLng object for the current location
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        try {
-            //set map type
-            map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
 
-            // Get latitude of the current location
-            lat = myLocation.getLatitude();
-
-            // Get longitude of the current location
-            lng = myLocation.getLongitude();
-
-            // Create a LatLng object for the current location
+        try{
             LatLng latLng = new LatLng(lat, lng);
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
         }catch (Exception e){
@@ -208,8 +230,81 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         }catch (SecurityException e){
             Log.v("_dan mapsec", e.getMessage());
         }
+        textViewLoading.setText("");
+
+    }
+    private class latLngFromAddressTask extends AsyncTask<String, Void, String[]> {
 
 
+        @Override
+        protected String[] doInBackground(String... params) {
+            String response;
+            try {
+                response = getLatLongByURL("http://maps.google.com/maps/api/geocode/json?address="+params[0].replace(",","").replace(" ","+")+"&sensor=false");
+                Log.d("response",""+response);
+                return new String[]{response};
+            } catch (Exception e) {
+                Log.v("_dan gmbackground",e.getMessage());
+                return new String[]{"error"};
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String... result) {
+            try {
+                JSONObject jsonObject = new JSONObject(result[0]);
+
+                lng = ((JSONArray)jsonObject.get("results")).getJSONObject(0)
+                        .getJSONObject("geometry").getJSONObject("location")
+                        .getDouble("lng");
+
+                lat = ((JSONArray)jsonObject.get("results")).getJSONObject(0)
+                        .getJSONObject("geometry").getJSONObject("location")
+                        .getDouble("lat");
+
+                Log.d("latitude", "" + lat);
+                Log.d("longitude", "" + lng);
+            } catch (JSONException e) {
+                Log.v("_dan gmjson", e.getMessage());
+            }
+            setupMap();
+        }
+    }
+    public String getLatLongByURL(String requestURL) {
+        URL url;
+        String response = "";
+        try {
+            url = new URL(requestURL);
+
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(15000);
+            conn.setConnectTimeout(15000);
+            conn.setRequestMethod("GET");
+            conn.setDoInput(true);
+            conn.setRequestProperty("Content-Type",
+                    "application/x-www-form-urlencoded");
+            conn.setDoOutput(true);
+            int responseCode = conn.getResponseCode();
+
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                String line;
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                while ((line = br.readLine()) != null) {
+                    response += line;
+                }
+            } else {
+                response = "";
+            }
+
+        } catch (Exception e) {
+            Log.v("_danlatlngbyurl",e.getMessage());
+            e.printStackTrace();
+        }
+        return response;
+    }
+    public void goToTextLocation(View v){
+        usingGps=false;
+        new latLngFromAddressTask().execute(editTextLocation.getText().toString());
     }
     //retreive S3
     public class retrieveTask extends AsyncTask<String,Integer,ArrayList<String>> {
