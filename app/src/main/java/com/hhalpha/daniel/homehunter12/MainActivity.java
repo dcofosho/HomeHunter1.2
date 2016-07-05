@@ -1,5 +1,5 @@
 package com.hhalpha.daniel.homehunter12;
-
+//imports
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -51,12 +51,13 @@ import java.util.Map;
  * Created by Daniel on 6/24/2016.
  */
 public class MainActivity extends Activity implements OnMapReadyCallback {
-    String profileName, loginMethod,email, salary;
+    //declarations
+    String profileName, loginMethod,email;
     Boolean registered;
     TextView textViewMain;
     SharedPreferences preferences;
     Double lat, lng;
-
+    int salary;
     Location myLocation;
 
     CustomListViewAdapter adapter;
@@ -72,9 +73,12 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //assignments
         textViewMain=(TextView) findViewById(R.id.textViewMain);
         preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         addresses=new ArrayList<String>();
+
+        //FB credentials for S3
         FacebookSdk.sdkInitialize(getApplicationContext());
         credentialsProvider = new CognitoCachingCredentialsProvider(
                 getApplicationContext(),
@@ -85,9 +89,9 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         logins.put("graph.facebook.com", AccessToken.getCurrentAccessToken().getToken());
         credentialsProvider.setLogins(logins);
         s3 = new AmazonS3Client(credentialsProvider);
-
         // Set the region of your S3 bucket
         s3.setRegion(Region.getRegion(Regions.US_EAST_1));
+        //listview adapter/etc.
         try {
             Log.v("_danoncreate",getApplicationContext().getCacheDir().listFiles().toString());
             propertyListEntries = new ArrayList<PropertyListEntry>();
@@ -112,12 +116,12 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         }catch(Exception e){
             e.printStackTrace();
         }
-
+        //get registration info from bundle
         try {
             Bundle bundle = getIntent().getBundleExtra("bundle");
             email=bundle.getString("email","");
 
-//            salary=bundle.getString("salary","");
+            salary=bundle.getInt("salary",0);
             Log.v("_dan",email+salary);
 
         }catch(Exception e){
@@ -133,13 +137,15 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         }catch(Exception e){
             e.printStackTrace();
         }
+
+        //initialize map
         lat=0.0;
         lng=0.0;
         setupMap();
         new retrieveTask().execute();
     }
 
-
+    //clear registration info
     public void clear (View v){
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("registered",false);
@@ -151,6 +157,8 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         Intent i = new Intent(MainActivity.this,SplashActivity.class);
         startActivity(i);
     }
+
+    //setupMap
     public void setupMap(){
         MapFragment mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
@@ -203,6 +211,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
 
 
     }
+    //retreive S3
     public class retrieveTask extends AsyncTask<String,Integer,ArrayList<String>> {
 
         @Override
