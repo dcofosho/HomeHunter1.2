@@ -112,6 +112,21 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         // Set the region of your S3 bucket
         s3.setRegion(Region.getRegion(Regions.US_EAST_1));
         //listview adapter/etc.
+        //sort List by distance
+        try{
+            for(int i=0;i<propertyListEntries.size();i++){
+                propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
+            }
+            Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
+                @Override
+                public int compare(PropertyListEntry p1, PropertyListEntry p2) {
+                    return p1.getDistance().compareTo(p2.getDistance());
+                }
+            });
+            adapter.notifyDataSetChanged();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         try {
             Log.v("_danoncreate",getApplicationContext().getCacheDir().listFiles().toString());
             propertyListEntries = new ArrayList<PropertyListEntry>();
@@ -177,7 +192,10 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         Intent i = new Intent(MainActivity.this,SplashActivity.class);
         startActivity(i);
     }
-
+    public void gpsBtn(View v){
+        usingGps=true;
+        setupMap();
+    }
     //setupMap
     public void setupMap(){
         MapFragment mapFragment = (MapFragment) getFragmentManager()
@@ -230,6 +248,11 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         try{
             for(int i=0;i<propertyListEntries.size();i++){
                 propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
+            }
+            for(int i=0;i<propertyListEntries.size()-1;i++){
+                if(propertyListEntries.get(i).getDistance()>propertyListEntries.get(i+1).getDistance()){
+                    Collections.swap(propertyListEntries,i,i+1);
+                }
             }
             Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
                 @Override
@@ -417,7 +440,25 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         protected void onPostExecute(ArrayList<String> strings) {
             try {
                 Log.v("_danPostExecute",strings.toString());
-                adapter.notifyDataSetChanged();
+                try{
+                    for(int i=0;i<propertyListEntries.size();i++){
+                        propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
+                    }
+                    for(int i=0;i<propertyListEntries.size()-1;i++){
+                        if(propertyListEntries.get(i).getDistance()>propertyListEntries.get(i+1).getDistance()){
+                            Collections.swap(propertyListEntries,i,i+1);
+                        }
+                    }
+                    Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
+                        @Override
+                        public int compare(PropertyListEntry p1, PropertyListEntry p2) {
+                            return p1.getDistance().compareTo(p2.getDistance());
+                        }
+                    });
+                    adapter.notifyDataSetChanged();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }catch(Exception e){
                 e.printStackTrace();
             }

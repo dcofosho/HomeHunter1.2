@@ -46,6 +46,12 @@
         android:text="Go"
         android:onClick= "goToTextLocation"
         android:id="@+id/locationButton" />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Get GPS location"
+        android:onClick= "gpsBtn"
+        android:id="@+id/gpsButton" />
 
 
 
