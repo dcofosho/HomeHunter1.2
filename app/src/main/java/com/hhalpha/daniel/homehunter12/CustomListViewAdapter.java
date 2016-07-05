@@ -9,6 +9,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -19,6 +21,7 @@ public class CustomListViewAdapter extends ArrayAdapter<PropertyListEntry> {
     public CustomListViewAdapter(Context context, int resourceId, List<PropertyListEntry> items){
         super(context, resourceId, items);
         this.context = context;
+
     }
 
     private class ViewHolder{

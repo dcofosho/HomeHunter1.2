@@ -55,6 +55,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -217,14 +218,29 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                 // Get longitude of the current location
                 lng = myLocation.getLongitude();
 
-                // Create a LatLng object for the current location
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-        }
 
+
+        }
+        //sort List by distance
+        try{
+            for(int i=0;i<propertyListEntries.size();i++){
+                propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
+            }
+            Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
+                @Override
+                public int compare(PropertyListEntry p1, PropertyListEntry p2) {
+                    return p1.getDistance().compareTo(p2.getDistance());
+                }
+            });
+            adapter.notifyDataSetChanged();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         try{
             LatLng latLng = new LatLng(lat, lng);
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
@@ -255,6 +271,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                 return new String[]{"error"};
             }
         }
+
 
         @Override
         protected void onPostExecute(String... result) {
@@ -290,6 +307,17 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                 for(int i=0;i<propertyListEntries.size();i++){
                     propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
                 }
+                for(int i=0;i<propertyListEntries.size()-1;i++){
+                    if(propertyListEntries.get(i).getDistance()>propertyListEntries.get(i+1).getDistance()){
+                        Collections.swap(propertyListEntries,i,i+1);
+                    }
+                }
+                Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
+                    @Override
+                    public int compare(PropertyListEntry p1, PropertyListEntry p2) {
+                        return p1.getDistance().compareTo(p2.getDistance());
+                    }
+                });
                 adapter.notifyDataSetChanged();
             }catch (Exception e){
                 e.printStackTrace();
