@@ -46,7 +46,7 @@ public class CustomListViewAdapter extends ArrayAdapter<PropertyListEntry> {
         }
 
 
-        holder.textViewProp.setText(propertyListEntry.getPropertyText());
+        holder.textViewProp.setText(propertyListEntry.getPropertyText()+propertyListEntry.getDistance());
         holder.imageViewProp.setImageBitmap(propertyListEntry.getPic());
 
         return convertView;

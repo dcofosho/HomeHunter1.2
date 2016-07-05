@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Criteria;
@@ -53,6 +54,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,10 +67,10 @@ import javax.net.ssl.HttpsURLConnection;
 public class MainActivity extends Activity implements OnMapReadyCallback {
     //declarations
     String profileName, loginMethod,email;
-    Boolean registered,usingGps;
+    Boolean registered,usingGps,gettingPropLocation;
     TextView textViewMain, textViewLoading;
     SharedPreferences preferences;
-    Double lat, lng;
+    Double lat, lng, propLat, propLong;
     int salary;
     Location myLocation;
     EditText editTextLocation;
@@ -85,7 +87,10 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         usingGps=true;
+        gettingPropLocation=false;
+
         //assignments
         textViewMain=(TextView) findViewById(R.id.textViewMain);
         textViewLoading=(TextView) findViewById(R.id.textViewLoading);
@@ -152,11 +157,11 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
             e.printStackTrace();
         }
 
-        //initialize map
-        lat=0.0;
-        lng=0.0;
-        setupMap();
+//        //initialize map
+//        lat=0.0;
+//        lng=0.0;
         new retrieveTask().execute();
+
     }
 
     //clear registration info
@@ -178,7 +183,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
-
+    //onMapReady
     @Override
     public void onMapReady(GoogleMap map) {
         try {
@@ -217,6 +222,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
         }
 
         try{
@@ -233,6 +239,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         textViewLoading.setText("");
 
     }
+    //async task for getting location from address string
     private class latLngFromAddressTask extends AsyncTask<String, Void, String[]> {
 
 
@@ -253,23 +260,44 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         protected void onPostExecute(String... result) {
             try {
                 JSONObject jsonObject = new JSONObject(result[0]);
+//                if(!gettingPropLocation) {
+                    lng = ((JSONArray) jsonObject.get("results")).getJSONObject(0)
+                            .getJSONObject("geometry").getJSONObject("location")
+                            .getDouble("lng");
 
-                lng = ((JSONArray)jsonObject.get("results")).getJSONObject(0)
-                        .getJSONObject("geometry").getJSONObject("location")
-                        .getDouble("lng");
+                    lat = ((JSONArray) jsonObject.get("results")).getJSONObject(0)
+                            .getJSONObject("geometry").getJSONObject("location")
+                            .getDouble("lat");
+                    Log.d("latitude", "" + lat);
+                    Log.d("longitude", "" + lng);
+//                }
+//                if(gettingPropLocation){
+//                    propLong = ((JSONArray) jsonObject.get("results")).getJSONObject(0)
+//                            .getJSONObject("geometry").getJSONObject("location")
+//                            .getDouble("lng");
+//
+//                    propLat = ((JSONArray) jsonObject.get("results")).getJSONObject(0)
+//                            .getJSONObject("geometry").getJSONObject("location")
+//                            .getDouble("lat");
+//                    Log.d("latitude", "" + propLat);
+//                    Log.d("longitude", "" + propLong);
+//                }
 
-                lat = ((JSONArray)jsonObject.get("results")).getJSONObject(0)
-                        .getJSONObject("geometry").getJSONObject("location")
-                        .getDouble("lat");
-
-                Log.d("latitude", "" + lat);
-                Log.d("longitude", "" + lng);
             } catch (JSONException e) {
-                Log.v("_dan gmjson", e.getMessage());
+                e.printStackTrace();
+            }
+            try{
+                for(int i=0;i<propertyListEntries.size();i++){
+                    propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
+                }
+                adapter.notifyDataSetChanged();
+            }catch (Exception e){
+                e.printStackTrace();
             }
             setupMap();
         }
     }
+    //method for getting lat and lng from a location URL
     public String getLatLongByURL(String requestURL) {
         URL url;
         String response = "";
@@ -324,10 +352,15 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                         ObjectMetadata metadata = s3.getObject("hhproperties", key).getObjectMetadata();
                         Log.v("_dan meta",metadata.getUserMetaDataOf("info").toString());
                         metadataArrayList.add(metadata.getUserMetaDataOf("info").toString());
+                        Log.v("_dan meta",metadata.getUserMetaDataOf("coords").toString());
+                        metadataArrayList.add(metadata.getUserMetaDataOf("coords").toString());
+                        Double propertyLatitude=Double.parseDouble(metadata.getUserMetaDataOf("coords").toString().replace("[","").replace("]","").split(",")[0]);
+                        Double propertyLongitude=Double.parseDouble(metadata.getUserMetaDataOf("coords").toString().replace("[","").replace("]","").split(",")[1]);
+                        Double propertyDistance = distance(lat,lng,propertyLatitude,propertyLongitude);
                         byte[] bytes = IOUtils.toByteArray(content);
                         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
-                        PropertyListEntry propertyListEntry = new PropertyListEntry(key, bitmap);
+                        PropertyListEntry propertyListEntry = new PropertyListEntry(key, bitmap,propertyDistance,propertyLatitude,propertyLongitude);
                         propertyListEntry.setPic(bitmap);
                         propertyListEntry.setPropertyText(key);
                         if(!addresses.toString().contains(summary.getKey().split("/")[0])) {
@@ -348,6 +381,11 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         }
 
         @Override
+        protected void onPreExecute() {
+            setupMap();
+        }
+
+        @Override
         protected void onPostExecute(ArrayList<String> strings) {
             try {
                 Log.v("_danPostExecute",strings.toString());
@@ -356,5 +394,27 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                 e.printStackTrace();
             }
         }
+    }
+
+
+    private static final int EARTH_RADIUS = 6371; // Approx Earth radius in KM
+
+    public static double distance(double startLat, double startLong,
+                                  double endLat, double endLong) {
+
+        double dLat  = Math.toRadians((endLat - startLat));
+        double dLong = Math.toRadians((endLong - startLong));
+
+        startLat = Math.toRadians(startLat);
+        endLat   = Math.toRadians(endLat);
+
+        double a = haversin(dLat) + Math.cos(startLat) * Math.cos(endLat) * haversin(dLong);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return EARTH_RADIUS * c; // <-- d
+    }
+
+    public static double haversin(double val) {
+        return Math.pow(Math.sin(val / 2), 2);
     }
 }
