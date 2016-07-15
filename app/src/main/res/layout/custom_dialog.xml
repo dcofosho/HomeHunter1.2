@@ -22,7 +22,7 @@
         android:layout_height="30dp"
         android:background="@android:color/white"
         android:clickable="true"
-        android:text="Set time"
+        android:text="Request appointment"
         android:textColor="#5DBCD2"
         android:textStyle="bold" />
 </LinearLayout>

@@ -21,6 +21,8 @@ import com.amazonaws.ResponseMetadata;
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.mobileconnectors.cognito.CognitoSyncManager;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBScanExpression;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.PaginatedScanList;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -65,8 +67,10 @@ import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
 import com.facebook.Profile;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -88,6 +92,7 @@ public class CustomDialogClass extends Dialog implements
     CognitoCachingCredentialsProvider credentialsProvider;
     CognitoSyncManager syncClient;
     Timeslot timeslot;
+    Appointment appointment;
     CheckBox checkBoxAM, checkBoxPM;
     String amPm;
     public CustomDialogClass(Activity a, Bundle args) {
@@ -106,7 +111,7 @@ public class CustomDialogClass extends Dialog implements
         setContentView(R.layout.custom_dialog);
 
         txt_dia=(TextView)findViewById(R.id.txt_dia);
-        txt_dia.setText(date.split(" ")[0].toString()+" "+date.split(" ")[1].toString()+" "+date.split(" ")[2].toString()+"\n"+address);
+        txt_dia.setText(date.split(" ")[0].toString()+" "+date.split(" ")[1].toString()+"\n"+date.split(" ")[2].toString());
         yes = (Button) findViewById(R.id.btn_yes);
 
         yes.setOnClickListener(this);
@@ -116,7 +121,7 @@ public class CustomDialogClass extends Dialog implements
         try{
             credentialsProvider = new CognitoCachingCredentialsProvider(
                     getContext(),
-                    "us-east-1:db3a6e00-7c35-4f48-b956-eaf3375a024f", // Identity Pool ID
+                    "us-east-1:f297743b-8f2b-4874-8bef-3ee300d8b4a3", // Identity Pool ID
                     Regions.US_EAST_1 // Region
             );
             Map<String, String> logins = new HashMap<String, String>();
@@ -358,11 +363,30 @@ public class CustomDialogClass extends Dialog implements
             credentialsProvider.refresh();
             ddbClient = new AmazonDynamoDBClient(credentialsProvider);
             mapper = new DynamoDBMapper(ddbClient);
-            timeslot=new Timeslot();
+            appointment = new Appointment();
             try {
-                timeslot.setTime(date.split(" ")[0].toString()+" "+date.split(" ")[1].toString()+" "+date.split(" ")[2].toString()+" "+hours+":"+mins+amPm+date.split(" ")[5].toString()+" @ "+address);
-                timeslot.setHost(Profile.getCurrentProfile().getName());
-                mapper.save(timeslot);
+                appointment.setTime(date.split(" ")[0].toString()+" "+date.split(" ")[1].toString()+" "+date.split(" ")[2].toString()+" "+hours+":"+mins+amPm+date.split(" ")[5].toString()+" @ "+address);
+//                appointment.setHost(Profile.getCurrentProfile().getName());
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try{
+//                timeslot = mapper.load(Timeslot.class,new SimpleDateFormat("EEE MMM dd hh:mm a yyyy", Locale.US).parse(date)+" @ "+address);
+                DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
+                PaginatedScanList<Timeslot> result = mapper.scan(Timeslot.class, scanExpression);
+                for(int i=0;i<result.size();i++) {
+                    if (result.get(i).getTime().split("@")[1].contains(address.replace("[", "").replace("]", "").replace("+", "").replace(",", ""))) {
+                        Log.v("_dan custdialog result",result.get(i).getTime().split("@")[1]);
+                        appointment.setHost(result.get(i).getHost());
+                    }
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            try{
+                mapper.save(appointment);
             }catch (Exception e){
                 e.printStackTrace();
             }

@@ -100,7 +100,7 @@ public class ScheduleActivity extends Activity {
         try{
             credentialsProvider = new CognitoCachingCredentialsProvider(
                     getApplicationContext(),
-                    "us-east-1:f297743b-8f2b-4874-8bef-3ee300d8b4a3", // Identity Pool ID
+                    "us-east-1:f297743b-8f2b-4874-8bef-3ee300d8b4a3", // Identity Pool for shoppers
                     Regions.US_EAST_1 // Region
             );
             Map<String, String> logins = new HashMap<String, String>();
@@ -341,7 +341,7 @@ public class ScheduleActivity extends Activity {
                                 Bundle bundle = new Bundle();
                                 bundle.putString("address", address.replace("[", "").replace("+", ""));
                                 bundle.putString("date", dayView.getDate().toString());
-                                SimpleDateFormat df = new SimpleDateFormat("EEE MMM dd hh:mm a yyyy");
+                                SimpleDateFormat df = new SimpleDateFormat("EEE MMM dd hh:mm a yyyy", Locale.US);
                                 Toast.makeText(ScheduleActivity.this, df.format(dayView.getDate()), Toast.LENGTH_SHORT).show();
                                 CustomDialogClass cdd = new CustomDialogClass(ScheduleActivity.this, bundle);
 //                    cdd.setTitle(string.replace("[","").replace("+",""));
