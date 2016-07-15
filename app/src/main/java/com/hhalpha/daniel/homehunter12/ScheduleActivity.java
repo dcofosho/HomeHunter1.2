@@ -341,7 +341,7 @@ public class ScheduleActivity extends Activity {
                                 Bundle bundle = new Bundle();
                                 bundle.putString("address", address.replace("[", "").replace("+", ""));
                                 bundle.putString("date", dayView.getDate().toString());
-                                SimpleDateFormat df = new SimpleDateFormat("EEE MMM dd hh:mm a yyyy", Locale.US);
+                                SimpleDateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.US);
                                 Toast.makeText(ScheduleActivity.this, df.format(dayView.getDate()), Toast.LENGTH_SHORT).show();
                                 CustomDialogClass cdd = new CustomDialogClass(ScheduleActivity.this, bundle);
 //                    cdd.setTitle(string.replace("[","").replace("+",""));
@@ -460,7 +460,7 @@ public class ScheduleActivity extends Activity {
             for(int i=0;i<result.size();i++) {
                 try{
                     if(result.get(i).getTime().split("@")[1].contains(address.replace("[","").replace("]","").replace("+","").replace(",",""))) {
-                        dates.add(new SimpleDateFormat("EEE MMM dd hh:mm a yyyy", Locale.US).parse(result.get(i).getTime().split("@")[0]));
+                        dates.add(new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.US).parse(result.get(i).getTime().split("@")[0]));
                     }
                 }catch (Exception e){
                     e.printStackTrace();

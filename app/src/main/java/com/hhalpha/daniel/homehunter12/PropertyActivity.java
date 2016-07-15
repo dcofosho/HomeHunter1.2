@@ -47,7 +47,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -61,7 +63,7 @@ public class PropertyActivity extends Activity implements OnMapReadyCallback {
     Boolean guarantor, dogs, smallDogs, cats, couples, children, smoking, securityDeposit, doorman;
     TextView textViewAddress,textViewSqft,textViewRent, textViewMinSalary, textViewShort, textViewLong, textViewBeds, textViewBaths, textViewCouples, textViewChildren, textViewSmallDogs, textViewDogs, textViewCats, textViewSmoking, textViewGuarantor, textViewSecurity, textViewDoorman;
     Bundle bundle;
-    ArrayList<String> arrayList;
+    List<String> arrayList;
     private CognitoCachingCredentialsProvider credentialsProvider;
     CognitoSyncManager syncClient;
     AmazonS3 s3;
@@ -124,7 +126,7 @@ public class PropertyActivity extends Activity implements OnMapReadyCallback {
 
 
 
-            arrayList = bundle.getStringArrayList("arrayList");
+            arrayList = Arrays.asList(bundle.getStringArrayList("arrayList").toString().split(","));
             Log.v("_dan confirm",arrayList.toString());
 //            firstTime= bundle.getBoolean("firstTime");
 //            if(firstTime){

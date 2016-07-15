@@ -72,7 +72,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
     TextView textViewMain, textViewLoading;
     SharedPreferences preferences;
     Double lat, lng, propLat, propLong;
-    int salary;
+    int salary, metaIndex;
     Location myLocation;
     EditText editTextLocation;
     CustomListViewAdapter adapter;
@@ -88,7 +88,8 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        propertyListEntries = new ArrayList<PropertyListEntry>();
+        metadataArrayList=new ArrayList<String>();
         usingGps=true;
         gettingPropLocation=false;
 
@@ -129,18 +130,43 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         }
         try {
             Log.v("_danoncreate",getApplicationContext().getCacheDir().listFiles().toString());
-            propertyListEntries = new ArrayList<PropertyListEntry>();
-            metadataArrayList=new ArrayList<String>();
-            adapter = new CustomListViewAdapter(getApplicationContext(), R.layout.list_layout1, propertyListEntries);
-            listView = (ListView) findViewById(R.id.listView);
-            listView.setAdapter(adapter);
+
+
+            //sort List by distance
+            try{
+                for(int i=0;i<propertyListEntries.size();i++){
+                    propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
+                }
+                for(int i=0;i<propertyListEntries.size()-1;i++){
+                    if(propertyListEntries.get(i).getDistance()>propertyListEntries.get(i+1).getDistance()){
+                        Collections.swap(propertyListEntries,i,i+1);
+                    }
+                }
+                Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
+                    @Override
+                    public int compare(PropertyListEntry p1, PropertyListEntry p2) {
+                        return p1.getDistance().compareTo(p2.getDistance());
+                    }
+                });
+                adapter = new CustomListViewAdapter(getApplicationContext(), R.layout.list_layout1, propertyListEntries);
+                listView = (ListView) findViewById(R.id.listView);
+                listView.setAdapter(adapter);
+                adapter.notifyDataSetChanged();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Log.v("_dan click",metadataArrayList.toString());
                     Bundle bundle=new Bundle();
                     Intent i = new Intent(MainActivity.this, PropertyActivity.class);
-                    bundle.putStringArrayList("arrayList",new ArrayList<String>(Arrays.asList(metadataArrayList.get(position).toString().split(","))));
+                    for(int x=0;x<metadataArrayList.size();x++){
+                        if(metadataArrayList.get(x).toString().replace("[","").replace("]","").replace("+","").contains(propertyListEntries.get(position).getPropertyText().split("/")[0].replace(",",""))){
+                            metaIndex=x;
+                        }
+                    }
+                    bundle.putStringArrayList("arrayList",new ArrayList<String>(Arrays.asList(metadataArrayList.get(metaIndex).toString().split("/")[0])));
                     bundle.putBoolean("firstTime",false);
                     i.putExtra("bundle",bundle);
                     startActivity(i);
@@ -244,26 +270,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
 
 
         }
-        //sort List by distance
-        try{
-            for(int i=0;i<propertyListEntries.size();i++){
-                propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
-            }
-            for(int i=0;i<propertyListEntries.size()-1;i++){
-                if(propertyListEntries.get(i).getDistance()>propertyListEntries.get(i+1).getDistance()){
-                    Collections.swap(propertyListEntries,i,i+1);
-                }
-            }
-            Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
-                @Override
-                public int compare(PropertyListEntry p1, PropertyListEntry p2) {
-                    return p1.getDistance().compareTo(p2.getDistance());
-                }
-            });
-            adapter.notifyDataSetChanged();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+
         try{
             LatLng latLng = new LatLng(lat, lng);
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
