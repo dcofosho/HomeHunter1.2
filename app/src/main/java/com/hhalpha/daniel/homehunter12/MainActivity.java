@@ -459,6 +459,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                 }catch (Exception e){
                     e.printStackTrace();
                 }
+
             }catch(Exception e){
                 e.printStackTrace();
             }

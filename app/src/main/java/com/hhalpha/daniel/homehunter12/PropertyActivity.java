@@ -2,6 +2,7 @@ package com.hhalpha.daniel.homehunter12;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -293,7 +294,9 @@ public class PropertyActivity extends Activity implements OnMapReadyCallback {
     }
 
     public void scheduleAppt(View v){
-
+        Intent i = new Intent(PropertyActivity.this,ScheduleActivity.class);
+        i.putExtra("address",address);
+        startActivity(i);
     }
     public void setupMap(){
         MapFragment mapFragment = (MapFragment) getFragmentManager()
