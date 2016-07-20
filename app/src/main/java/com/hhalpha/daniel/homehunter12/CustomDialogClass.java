@@ -364,13 +364,13 @@ public class CustomDialogClass extends Dialog implements
             ddbClient = new AmazonDynamoDBClient(credentialsProvider);
             mapper = new DynamoDBMapper(ddbClient);
             appointment = new Appointment();
-            try {
-                appointment.setTime(date.split(" ")[0].toString()+" "+date.split(" ")[1].toString()+" "+date.split(" ")[2].toString()+" "+hours+":"+mins+amPm+date.split(" ")[5].toString()+" @ "+address);
-//                appointment.setHost(Profile.getCurrentProfile().getName());
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+//            try {
+//                appointment.setTime(date+" @ "+address);
+////                appointment.setHost(Profile.getCurrentProfile().getName());
+//
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
             try{
 //                timeslot = mapper.load(Timeslot.class,new SimpleDateFormat("EEE MMM dd hh:mm a yyyy", Locale.US).parse(date)+" @ "+address);
                 DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
@@ -379,6 +379,8 @@ public class CustomDialogClass extends Dialog implements
                     if (result.get(i).getTime().split("@")[1].contains(address.replace("[", "").replace("]", "").replace("+", "").replace(",", ""))) {
                         Log.v("_dan custdialog result",result.get(i).getTime().split("@")[1]);
                         appointment.setHost(result.get(i).getHost());
+                        appointment.setTime(result.get(i).getTime());
+                        timeslot=result.get(i);
                     }
                 }
             }catch (Exception e){
@@ -387,6 +389,11 @@ public class CustomDialogClass extends Dialog implements
 
             try{
                 mapper.save(appointment);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try{
+                mapper.delete(timeslot);
             }catch (Exception e){
                 e.printStackTrace();
             }
