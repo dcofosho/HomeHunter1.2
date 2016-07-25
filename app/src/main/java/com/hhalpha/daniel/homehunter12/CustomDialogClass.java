@@ -2,8 +2,10 @@ package com.hhalpha.daniel.homehunter12;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -95,6 +97,7 @@ public class CustomDialogClass extends Dialog implements
     Appointment appointment;
     CheckBox checkBoxAM, checkBoxPM;
     String amPm;
+    SharedPreferences prefs;
     public CustomDialogClass(Activity a, Bundle args) {
         super(a);
         // TODO Auto-generated constructor stub
@@ -109,7 +112,7 @@ public class CustomDialogClass extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         setContentView(R.layout.custom_dialog);
-
+        prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         txt_dia=(TextView)findViewById(R.id.txt_dia);
         txt_dia.setText(date.split(" ")[0].toString()+" "+date.split(" ")[1].toString()+"\n"+date.split(" ")[2].toString());
         yes = (Button) findViewById(R.id.btn_yes);
@@ -378,7 +381,7 @@ public class CustomDialogClass extends Dialog implements
                 for(int i=0;i<result.size();i++) {
                     if (result.get(i).getTime().split("@")[1].contains(address.replace("[", "").replace("]", "").replace("+", "").replace(",", ""))) {
                         Log.v("_dan custdialog result",result.get(i).getTime().split("@")[1]);
-                        appointment.setHost(result.get(i).getHost());
+                        appointment.setHost(result.get(i).getHost() + "@" + prefs.getString("profileName",""));
                         appointment.setTime(result.get(i).getTime());
                         timeslot=result.get(i);
                     }
