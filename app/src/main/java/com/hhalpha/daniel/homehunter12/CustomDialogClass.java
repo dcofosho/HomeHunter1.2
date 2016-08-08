@@ -87,7 +87,7 @@ public class CustomDialogClass extends Dialog implements
     TextView txt_dia;
     AmazonDynamoDBClient ddbClient;
     Spinner spinnerHours, spinnerMinutes;
-    String hours, mins, date, address;
+    String hours, mins, date, address, myHost;
     DynamoDBMapper mapper;
     AmazonDynamoDB dynamoDB;
     String status;
@@ -383,6 +383,8 @@ public class CustomDialogClass extends Dialog implements
                             appointment.setHost(result.get(i).getHost() + "@" + prefs.getString("profileName", ""));
                             appointment.setTime(result.get(i).getTime());
                             timeslot = result.get(i);
+                            myHost=timeslot.getHost().split("@")[0];
+                            Log.v("_dan host",myHost);
                         }
                     }
                 } catch (Exception e) {
@@ -412,6 +414,7 @@ public class CustomDialogClass extends Dialog implements
                             timeslot.setHost(result.get(i).getHost() + "@" + prefs.getString("profileName", ""));
                             timeslot.setTime(result.get(i).getTime());
                             appointment = result.get(i);
+
                         }
                     }
                 } catch (Exception e) {
@@ -441,6 +444,7 @@ public class CustomDialogClass extends Dialog implements
                             timeslot.setHost(result.get(i).getHost() + "@" + prefs.getString("profileName", ""));
                             timeslot.setTime(result.get(i).getTime());
                             confirmedAppointment = result.get(i);
+
                         }
                     }
                 } catch (Exception e) {
