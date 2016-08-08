@@ -82,10 +82,13 @@ import java.util.Map;
  */
 public class ScheduleActivity extends Activity {
     String address;
+    SharedPreferences prefs;
+    String string;
     CustomCalendarView calendarView;
     Calendar currentCalendar;
     List<DayDecorator> list;
     ArrayList<Date> dates, appts, confAppts;
+    ArrayList<ArrayList<Date>> dateArrayLists;
     DynamoDBMapper mapper;
     CognitoCachingCredentialsProvider credentialsProvider;
     CognitoSyncManager syncClient;
@@ -93,8 +96,11 @@ public class ScheduleActivity extends Activity {
     AmazonDynamoDB dynamoDB;
     AmazonDynamoDBClient ddbClient;
     ArrayList<Integer> apptIndicies;
-    int apptIndex;
-    SharedPreferences prefs;
+    int apptIndex, numSlots, numAppts, numConfAppts;
+    String status;
+    ArrayList<String> dateArrayList, apptArrayList, confApptArrayList, statusList;
+    Boolean available, requested, confirmed;
+    Bundle bundle;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,6 +111,14 @@ public class ScheduleActivity extends Activity {
         apptIndicies=new ArrayList<>();
         calendarView = (CustomCalendarView) findViewById(R.id.calendar_view);
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        bundle=new Bundle();
+        available=false;
+        requested=false;
+        confirmed=false;
+        dateArrayList = new ArrayList<>();
+        dateArrayLists=new ArrayList<>();
+        apptArrayList=new ArrayList<>();
+        confApptArrayList=new ArrayList<>();
         FacebookSdk.sdkInitialize(getApplicationContext());
         try{
             credentialsProvider = new CognitoCachingCredentialsProvider(
@@ -337,92 +351,36 @@ public class ScheduleActivity extends Activity {
     }
 
     public class DaysDecorator implements DayDecorator {
-            @Override
-            public void decorate(final DayView dayView) {
 
+        @Override
+        public void decorate(final DayView dayView) {
+            numSlots=0;
+            numAppts=0;
+            numConfAppts=0;
+            if (isPastDay(dayView.getDate())) {
+                dayView.setBackgroundColor(Color.parseColor("#a7a7FF"));
+            }else {//determine if each date includes available, requested, or confirmed time slots, and if so, how many.
                 for (int i = 0; i < dates.size(); i++) {
                     apptIndex = i;
                     if (dates.get(i).toString().replace("[", "").replace("]", "").contains(dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2])) {
-
-                        dayView.setBackgroundColor(Color.parseColor("#FFa7a7"));
-                        dayView.setText(dates.get(i).toString());
-                        dayView.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                try {
-                                    Bundle bundle = new Bundle();
-                                    bundle.putString("address", address.replace("[", "").replace("+", ""));
-                                    bundle.putString("date", dates.get(apptIndex).toString());//
-
-
-                                    CustomDialogClass cdd = new CustomDialogClass(ScheduleActivity.this, bundle);
-//                    cdd.setTitle(string.replace("[","").replace("+",""));
-                                    cdd.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                                        @Override
-                                        public void onDismiss(DialogInterface dialog) {
-                                            dayView.setBackgroundColor(Color.parseColor("#a7a7a7"));
-                                            dayView.setText("Awaiting confirmation for " + dayView.getText().toString());
-                                            SimpleDateFormat df = new SimpleDateFormat("EEE MMM dd hh:mm a yyyy", Locale.US);
-                                            Toast.makeText(ScheduleActivity.this, df.format(dayView.getDate()), Toast.LENGTH_SHORT).show();
-
-                                            Intent i = getIntent();
-                                            startActivity(i);
-                                        }
-                                    });
-
-                                    cdd.show();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
+//                        statusList.add("available");
+//                        available=true;
+                        numSlots++;
+                        dayView.setBackgroundColor(Color.parseColor("#cca7a7"));
                     }
 
-                    if (isPastDay(dayView.getDate())) {
-                        dayView.setBackgroundColor(Color.parseColor("#a7a7FF"));
-                    }
 
                 }
                 for (int y = 0; y < appts.size(); y++) {
                     apptIndex = y;
                     if (appts.get(y).toString().replace("[", "").replace("]", "").contains(dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2])) {
-
+//                        statusList.add("requested");
+//                        requested=true;
+                        numAppts++;
                         dayView.setBackgroundColor(Color.parseColor("#a7a7bb"));
-                        dayView.setText("Awaiting confirmation for " + appts.get(y).toString());
-                        dayView.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-//                                try {
-//                                    Bundle bundle = new Bundle();
-//                                    bundle.putString("address", address.replace("[", "").replace("+", ""));
-//                                    bundle.putString("date", dates.get(apptIndex).toString());//
-//
-//
-//                                    CustomDialogClass cdd = new CustomDialogClass(ScheduleActivity.this, bundle);
-////                    cdd.setTitle(string.replace("[","").replace("+",""));
-//                                    cdd.setOnDismissListener(new DialogInterface.OnDismissListener() {
-//                                        @Override
-//                                        public void onDismiss(DialogInterface dialog) {
-//                                            dayView.setBackgroundColor(Color.parseColor("#a7a7a7"));
-//                                            dayView.setText("Awaiting confirmation for "+dayView.getText().toString());
-//                                            SimpleDateFormat df = new SimpleDateFormat("EEE MMM dd hh:mm a yyyy", Locale.US);
-//                                            Toast.makeText(ScheduleActivity.this, df.format(dayView.getDate()), Toast.LENGTH_SHORT).show();
-//
-//                                            Intent i = getIntent();
-//                                            startActivity(i);
-//                                        }
-//                                    });
-//
-//                                    cdd.show();
-//                                }catch(Exception e){
-//                                    e.printStackTrace();
-//                                }
-                            }
-                        });
                     }
-
-
                 }
+
                 for (int z = 0; z < confAppts.size(); z++) {
 //                    statusList.add("confirmed");
                     apptIndex = z;
@@ -430,13 +388,92 @@ public class ScheduleActivity extends Activity {
                     Log.v("dan dayview get date", dayView.getDate().toString());
                     if (confAppts.get(z).toString().replace("[", "").replace("]", "").contains(dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2])) {
 //                        confirmed=true;
-//                        numConfAppts++;
+                        numConfAppts++;
                         dayView.setBackgroundColor(Color.parseColor("#00FF00"));
-                        dayView.setText("Appointment confirmed for "+confAppts.get(z).toString().split(" ")[3]);
                     }
 
                 }
+
+                //
+                if(numSlots>0||numAppts>0||numConfAppts>0) {
+                    dayView.setText(dayView.getDate().toString().split(" ")[2]+"\n"+numConfAppts + " appointments confirmed!"+ "\n"+numSlots + " timeslots set as available" + "\n" + numAppts + " timeslots awaiting confirmation");
+                    dayView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            try{
+                                for(int x=0;x<dates.toString().split(",").length;x++){
+                                    Log.v("_dan sched dates",dates.toString().split(",")[x]);
+                                    Log.v("_dan sched dayview",dayView.getDate().toString());
+                                    if(dates.toString().split(",")[x].contains(dayView.getDate().toString().split(" ")[0]+" "+dayView.getDate().toString().split(" ")[1]+" "+dayView.getDate().toString().split(" ")[2])&&!dateArrayList.toString().contains(dayView.getDate().toString().split(" ")[3])){
+                                        dateArrayList.add(dates.toString().split(",")[x]);
+                                    }
+                                }
+//                                bundle.putBoolean("available",available);
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                            try{
+                                for(int x=0;x<appts.toString().split(",").length;x++){
+                                    Log.v("_dan sched appts",appts.toString().split(",")[x]);
+                                    if(appts.toString().split(",")[x].contains(dayView.getDate().toString().split(" ")[0]+" "+dayView.getDate().toString().split(" ")[1]+" "+dayView.getDate().toString().split(" ")[2])&&!apptArrayList.toString().contains(dayView.getDate().toString().split(" ")[3])){
+                                        apptArrayList.add(appts.toString().split(",")[x]);
+//                                        requested=true;
+                                    }
+                                }
+//                                bundle.putBoolean("requested",requested);
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                            try{
+                                for(int x=0;x<confAppts.toString().split(",").length;x++){
+                                    Log.v("_dan sched conf appts",confAppts.toString().split(",")[x]);
+                                    if(confAppts.toString().split(",")[x].contains(dayView.getDate().toString().split(" ")[0]+" "+dayView.getDate().toString().split(" ")[1]+" "+dayView.getDate().toString().split(" ")[2])&&!confApptArrayList.contains(dayView.getDate().toString().split(" ")[3])){
+                                        confApptArrayList.add(confAppts.toString().split(",")[x]);
+//                                        confirmed=true;
+                                    }
+                                }
+//                                bundle.putBoolean("confirmed",confirmed);
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                            try {
+                                bundle = new Bundle();
+                                bundle.putString("date", dayView.getDate().toString());//
+                                if(!address.isEmpty()){bundle.putString("address", address.replace("[", "").replace("]","").replace("+", ""));}
+//                                if(!statusList.isEmpty()){bundle.putStringArrayList("statusList",statusList);}
+                                if(!dateArrayList.isEmpty()){bundle.putStringArrayList("dateArrayList",dateArrayList);
+                                    available= true;}
+                                bundle.putBoolean("available",available);
+                                Log.v("_dan sched dates2",dateArrayList.toString());
+                                Log.v("_dan sched avail",available.toString());
+                                if(!apptArrayList.isEmpty()){bundle.putStringArrayList("apptArrayList",apptArrayList);
+                                    requested= true;}
+                                bundle.putBoolean("requested",requested);
+                                Log.v("_dan sched appts2",apptArrayList.toString());
+                                Log.v("_dan sched avail",requested.toString());
+                                if(!confApptArrayList.isEmpty()){bundle.putStringArrayList("confApptArrayList",confApptArrayList);
+                                    confirmed= true;}
+                                bundle.putBoolean("confirmed",confirmed);
+                                Log.v("_dan sched confAppt2",confApptArrayList.toString());
+                                Log.v("_dan sched conf",confirmed.toString());
+                                CustomListDialog cdd = new CustomListDialog(ScheduleActivity.this, bundle);
+                                cdd.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                    @Override
+                                    public void onDismiss(DialogInterface dialog) {
+                                        Intent i = getIntent();
+                                        startActivity(i);
+                                    }
+                                });
+                                cdd.show();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                }
             }
+
+        }
     }
     private boolean isPastDay(Date date) {
         Calendar c = Calendar.getInstance();
