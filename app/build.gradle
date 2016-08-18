@@ -32,7 +32,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.github.npanigrahy:Custom-Calendar-View:v1.0'
-    compile 'com.google.android.gms:play-services:9.0.1'
+    compile 'com.google.android.gms:play-services:9.4.0'
     compile 'com.amazonaws:aws-android-sdk-core:2.+'
     compile 'com.amazonaws:aws-android-sdk-cognito:2.+'
     compile 'com.amazonaws:aws-android-sdk-s3:2.+'
@@ -40,4 +40,6 @@ dependencies {
     compile 'com.amazonaws:aws-android-sdk-ddb-mapper:2.+'
     compile 'com.facebook.android:facebook-android-sdk:4.13.1'
     compile 'com.firebase:firebase-client-android:2.3.1'
+    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    compile 'com.twilio:client-android:1.2.17'
 }

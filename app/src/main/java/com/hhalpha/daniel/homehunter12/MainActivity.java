@@ -15,11 +15,13 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
@@ -65,7 +67,7 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * Created by Daniel on 6/24/2016.
  */
-public class MainActivity extends Activity implements OnMapReadyCallback {
+public class MainActivity extends Activity implements OnMapReadyCallback, AdapterView.OnItemClickListener {
     //declarations
     String profileName, loginMethod,email;
     Boolean registered,usingGps,gettingPropLocation;
@@ -84,6 +86,8 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
     AmazonS3 s3;
     TransferUtility transferUtility;
     CognitoCachingCredentialsProvider credentialsProvider;
+    private ScrollView scrollView;
+    private GoogleMap mMap;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,7 +98,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         gettingPropLocation=false;
 
         //assignments
-        textViewMain=(TextView) findViewById(R.id.textViewMain);
+
         textViewLoading=(TextView) findViewById(R.id.textViewLoading);
         preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         addresses=new ArrayList<String>();
@@ -114,65 +118,50 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         s3.setRegion(Region.getRegion(Regions.US_EAST_1));
         //listview adapter/etc.
         //sort List by distance
-        try{
-            for(int i=0;i<propertyListEntries.size();i++){
-                propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
-            }
-            Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
-                @Override
-                public int compare(PropertyListEntry p1, PropertyListEntry p2) {
-                    return p1.getDistance().compareTo(p2.getDistance());
-                }
-            });
-            adapter.notifyDataSetChanged();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+//        try{
+//            for(int i=0;i<propertyListEntries.size();i++){
+//                propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
+//            }
+//            Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
+//                @Override
+//                public int compare(PropertyListEntry p1, PropertyListEntry p2) {
+//                    return p1.getDistance().compareTo(p2.getDistance());
+//                }
+//            });
+////            adapter.notifyDataSetChanged();
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
         try {
             Log.v("_danoncreate",getApplicationContext().getCacheDir().listFiles().toString());
 
 
-            //sort List by distance
-            try{
-                for(int i=0;i<propertyListEntries.size();i++){
-                    propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
-                }
-                for(int i=0;i<propertyListEntries.size()-1;i++){
-                    if(propertyListEntries.get(i).getDistance()>propertyListEntries.get(i+1).getDistance()){
-                        Collections.swap(propertyListEntries,i,i+1);
-                    }
-                }
-                Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
-                    @Override
-                    public int compare(PropertyListEntry p1, PropertyListEntry p2) {
-                        return p1.getDistance().compareTo(p2.getDistance());
-                    }
-                });
-                adapter = new CustomListViewAdapter(getApplicationContext(), R.layout.list_layout1, propertyListEntries);
-                listView = (ListView) findViewById(R.id.listView);
-                listView.setAdapter(adapter);
-                adapter.notifyDataSetChanged();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Log.v("_dan click",metadataArrayList.toString());
-                    Bundle bundle=new Bundle();
-                    Intent i = new Intent(MainActivity.this, PropertyActivity.class);
-                    for(int x=0;x<metadataArrayList.size();x++){
-                        if(metadataArrayList.get(x).toString().replace("[","").replace("]","").replace("+","").contains(propertyListEntries.get(position).getPropertyText().split("/")[0].replace(",",""))){
-                            metaIndex=x;
-                        }
-                    }
-                    bundle.putStringArrayList("arrayList",new ArrayList<String>(Arrays.asList(metadataArrayList.get(metaIndex).toString().split("/")[0])));
-                    bundle.putBoolean("firstTime",false);
-                    i.putExtra("bundle",bundle);
-                    startActivity(i);
-                }
-
-            });
+//            //sort List by distance
+//            try{
+//                for(int i=0;i<propertyListEntries.size();i++){
+//                    propertyListEntries.get(i).setDistance(distance(lat,lng,propertyListEntries.get(i).getPropLat(),propertyListEntries.get(i).getPropLng()));
+//                }
+//                for(int i=0;i<propertyListEntries.size()-1;i++){
+//                    if(propertyListEntries.get(i).getDistance()>propertyListEntries.get(i+1).getDistance()){
+//                        Collections.swap(propertyListEntries,i,i+1);
+//                    }
+//                }
+//                Collections.sort(propertyListEntries,new Comparator<PropertyListEntry>() {
+//                    @Override
+//                    public int compare(PropertyListEntry p1, PropertyListEntry p2) {
+//                        return p1.getDistance().compareTo(p2.getDistance());
+//                    }
+//                });
+//
+////                adapter.notifyDataSetChanged();
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
+            adapter = new CustomListViewAdapter(getApplicationContext(), R.layout.list_layout1, propertyListEntries);
+            listView = (ListView) findViewById(R.id.listView);
+            listView.setAdapter(adapter);
+            ListHelper.getListViewSize(listView);
+            listView.setOnItemClickListener(this);
 
         }catch(Exception e){
             e.printStackTrace();
@@ -193,7 +182,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
             profileName=bundle.getString("profileName","");
             loginMethod=bundle.getString("loginMethod","");
             registered=bundle.getBoolean("registered",false);
-            textViewMain.setText(preferences.getAll().toString());
+//            textViewMain.setText(preferences.getAll().toString());
             Log.v("_danMain",bundle.toString());
         }catch(Exception e){
             e.printStackTrace();
@@ -205,7 +194,20 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         new retrieveTask().execute();
 
     }
-
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Log.v("_dan click",metadataArrayList.toString());
+        Bundle bundle=new Bundle();
+        Intent i = new Intent(MainActivity.this, PropertyActivity.class);
+        for(int x=0;x<metadataArrayList.size();x++){
+            if(metadataArrayList.get(x).toString().replace("[","").replace("]","").replace("+","").contains(propertyListEntries.get(position).getPropertyText().split("/")[0].replace(",",""))){
+                metaIndex=x;
+            }
+        }
+        bundle.putStringArrayList("arrayList",new ArrayList<String>(Arrays.asList(metadataArrayList.get(metaIndex).toString().split("/")[0])));
+        bundle.putBoolean("firstTime",false);
+        i.putExtra("bundle",bundle);
+        startActivity(i);
+    }
     //clear registration info
     public void clear (View v){
         SharedPreferences.Editor editor = preferences.edit();
@@ -308,15 +310,15 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
             try {
                 JSONObject jsonObject = new JSONObject(result[0]);
 //                if(!gettingPropLocation) {
-                    lng = ((JSONArray) jsonObject.get("results")).getJSONObject(0)
-                            .getJSONObject("geometry").getJSONObject("location")
-                            .getDouble("lng");
+                lng = ((JSONArray) jsonObject.get("results")).getJSONObject(0)
+                        .getJSONObject("geometry").getJSONObject("location")
+                        .getDouble("lng");
 
-                    lat = ((JSONArray) jsonObject.get("results")).getJSONObject(0)
-                            .getJSONObject("geometry").getJSONObject("location")
-                            .getDouble("lat");
-                    Log.d("latitude", "" + lat);
-                    Log.d("longitude", "" + lng);
+                lat = ((JSONArray) jsonObject.get("results")).getJSONObject(0)
+                        .getJSONObject("geometry").getJSONObject("location")
+                        .getDouble("lat");
+                Log.d("latitude", "" + lat);
+                Log.d("longitude", "" + lng);
 //                }
 //                if(gettingPropLocation){
 //                    propLong = ((JSONArray) jsonObject.get("results")).getJSONObject(0)
@@ -349,6 +351,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                     }
                 });
                 adapter.notifyDataSetChanged();
+
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -406,26 +409,29 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                     try {
                         Log.v("_dan", summary.getKey());
                         String key = summary.getKey();
-                        S3ObjectInputStream content = s3.getObject("hhproperties", key).getObjectContent();
-                        ObjectMetadata metadata = s3.getObject("hhproperties", key).getObjectMetadata();
-                        Log.v("_dan meta",metadata.getUserMetaDataOf("info").toString());
-                        metadataArrayList.add(metadata.getUserMetaDataOf("info").toString());
-                        Log.v("_dan meta",metadata.getUserMetaDataOf("coords").toString());
-                        metadataArrayList.add(metadata.getUserMetaDataOf("coords").toString());
-                        Double propertyLatitude=Double.parseDouble(metadata.getUserMetaDataOf("coords").toString().replace("[","").replace("]","").split(",")[0]);
-                        Double propertyLongitude=Double.parseDouble(metadata.getUserMetaDataOf("coords").toString().replace("[","").replace("]","").split(",")[1]);
-                        Double propertyDistance = distance(lat,lng,propertyLatitude,propertyLongitude);
-                        byte[] bytes = IOUtils.toByteArray(content);
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-
-                        PropertyListEntry propertyListEntry = new PropertyListEntry(key, bitmap,propertyDistance,propertyLatitude,propertyLongitude);
-                        propertyListEntry.setPic(bitmap);
-                        propertyListEntry.setPropertyText(key);
-                        if(!addresses.toString().contains(summary.getKey().split("/")[0])) {
-                            propertyListEntries.add(propertyListEntry);
-                            addresses.add(summary.getKey());
+                        if(key.contains("pic1")) {
+                            S3ObjectInputStream content = s3.getObject("hhproperties", key).getObjectContent();
+                            ObjectMetadata metadata = s3.getObject("hhproperties", key).getObjectMetadata();
+                            Log.v("_dan meta", metadata.getUserMetaDataOf("info").toString());
+                            metadataArrayList.add(metadata.getUserMetaDataOf("info").toString());
+                            Log.v("_dan meta", metadata.getUserMetaDataOf("coords").toString());
+                            metadataArrayList.add(metadata.getUserMetaDataOf("coords").toString());
+                            Double propertyLatitude = Double.parseDouble(metadata.getUserMetaDataOf("coords").toString().replace("[", "").replace("]", "").split(",")[0]);
+                            Double propertyLongitude = Double.parseDouble(metadata.getUserMetaDataOf("coords").toString().replace("[", "").replace("]", "").split(",")[1]);
+                            //Double propertyDistance = distance(lat, lng, propertyLatitude, propertyLongitude);
+                            byte[] bytes = IOUtils.toByteArray(content);
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+//                            int nh = (int) ( bitmap.getHeight() * (800.0 / bitmap.getWidth()) );
+                            Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 100, 100, true);
+                            PropertyListEntry propertyListEntry = new PropertyListEntry(key, scaled, 0.0, propertyLatitude, propertyLongitude);
+                            propertyListEntry.setPic(scaled);
+                            propertyListEntry.setPropertyText(key);
+                            if (!addresses.toString().contains(summary.getKey().split("/")[0])) {
+                                propertyListEntries.add(propertyListEntry);
+                                addresses.add(summary.getKey());
+                            }
+                            Log.v("_dan", addresses.toString());
                         }
-                        Log.v("_dan", addresses.toString());
                     }catch(Exception e){
                         e.printStackTrace();
                     }

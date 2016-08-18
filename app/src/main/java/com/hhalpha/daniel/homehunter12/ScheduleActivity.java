@@ -1,13 +1,20 @@
 package com.hhalpha.daniel.homehunter12;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Message;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -17,6 +24,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.ResponseMetadata;
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.http.HttpResponse;
 import com.amazonaws.mobileconnectors.cognito.CognitoSyncManager;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBScanExpression;
@@ -67,7 +75,16 @@ import com.imanoweb.calendarview.CalendarListener;
 import com.imanoweb.calendarview.CustomCalendarView;
 import com.imanoweb.calendarview.DayDecorator;
 import com.imanoweb.calendarview.DayView;
+import com.twilio.client.Twilio;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -77,10 +94,18 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 /**
  * Created by Daniel on 7/15/2016.
  */
-public class ScheduleActivity extends Activity {
+public class ScheduleActivity extends AppCompatActivity {
     String address;
     SharedPreferences prefs;
     String string;
@@ -101,10 +126,24 @@ public class ScheduleActivity extends Activity {
     ArrayList<String> dateArrayList, apptArrayList, confApptArrayList, statusList;
     Boolean available, requested, confirmed;
     Bundle bundle;
+    private OkHttpClient mClient=new OkHttpClient();
+    private Context mContext;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_schedule);
+        Twilio.initialize(getApplicationContext(), new Twilio.InitListener() {
+            @Override
+            public void onInitialized() {
+
+            }
+
+            @Override
+            public void onError(Exception e) {
+                e.printStackTrace();
+            }
+        });
+        mContext=getApplicationContext();
         dates=new ArrayList<>();
         appts=new ArrayList<>();
         confAppts=new ArrayList<>();
@@ -460,6 +499,26 @@ public class ScheduleActivity extends Activity {
                                 cdd.setOnDismissListener(new DialogInterface.OnDismissListener() {
                                     @Override
                                     public void onDismiss(DialogInterface dialog) {
+                                        sendSMS("+19146298713","dannyboy sms text 114");
+//                                        try {
+//                                            post("http://d4439893.ngrok.io/sms", new  Callback(){
+//                                                @Override
+//                                                public void onFailure(Call call, IOException e) {
+//                                                    e.printStackTrace();
+//                                                }
+//                                                @Override
+//                                                public void onResponse(Call call, final Response response) throws IOException {
+//                                                    runOnUiThread(new Runnable() {
+//                                                        @Override
+//                                                        public void run() {
+//                                                            Toast.makeText(getApplicationContext(),"SMS Sent!"+response.toString(),Toast.LENGTH_SHORT).show();
+//                                                        }
+//                                                    });
+//                                                }
+//                                            });
+//                                        } catch (IOException e) {
+//                                            e.printStackTrace();
+//                                        }
                                         Intent i = getIntent();
                                         startActivity(i);
                                     }
@@ -645,4 +704,82 @@ public class ScheduleActivity extends Activity {
 
 
     }
+//    Call post(String url, Callback callback) throws IOException {
+//        RequestBody formBody = new FormBody.Builder()
+//                .add("To", "+19146298713")
+//                .add("Body", "dan's twilio test numero1")
+//                .build();
+//        Request request = new Request.Builder()
+//                .url(url)
+//                .post(formBody)
+//                .build();
+//        Call response = mClient.newCall(request);
+//        response.enqueue(callback);
+//        return response;
+//    }
+
+    //---sends an SMS message to another device---
+    private void sendSMS(String phoneNumber, String message) {
+        String SENT = "SMS_SENT";
+        String DELIVERED = "SMS_DELIVERED";
+
+        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,
+                new Intent(SENT), 0);
+
+        PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0,
+                new Intent(DELIVERED), 0);
+
+        //---when the SMS has been sent---
+        registerReceiver(new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (getResultCode())
+                {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(getBaseContext(), "SMS sent",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                        Toast.makeText(getBaseContext(), "Generic failure",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NO_SERVICE:
+                        Toast.makeText(getBaseContext(), "No service",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NULL_PDU:
+                        Toast.makeText(getBaseContext(), "Null PDU",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_RADIO_OFF:
+                        Toast.makeText(getBaseContext(), "Radio off",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }, new IntentFilter(SENT));
+
+        //---when the SMS has been delivered---
+        registerReceiver(new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (getResultCode())
+                {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(getBaseContext(), "SMS delivered",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Toast.makeText(getBaseContext(), "SMS not delivered",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }, new IntentFilter(DELIVERED));
+
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);
+    }
+
+
 }

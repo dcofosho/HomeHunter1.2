@@ -2,6 +2,7 @@ package com.hhalpha.daniel.homehunter12;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -69,11 +71,20 @@ import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
 import com.facebook.Profile;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * Created by Daniel on 7/15/2016.
@@ -99,6 +110,7 @@ public class CustomDialogClass extends Dialog implements
     String amPm;
     SharedPreferences prefs;
     ConfirmedAppointment confirmedAppointment;
+
     public CustomDialogClass(Activity a, Bundle args) {
         super(a);
         // TODO Auto-generated constructor stub
@@ -353,6 +365,8 @@ public class CustomDialogClass extends Dialog implements
             Log.v("_dandia", address + "hours=" + hours + "mins=" + mins);
 
 
+
+
             new dynamoTask().execute();
         }
 
@@ -461,6 +475,10 @@ public class CustomDialogClass extends Dialog implements
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
+
+
+
             }
             return null;
         }

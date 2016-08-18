@@ -1,31 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    >
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Main"
-        android:id="@+id/textViewMain"
-        android:layout_gravity="center_horizontal"
-        />
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Clear Info"
-        android:id="@+id/clearButton"
-        android:onClick="clear"
-        android:layout_gravity="center_horizontal" />
+
+
+<ScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/scrollView">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <fragment
         class="com.google.android.gms.maps.MapFragment"
         android:id="@+id/map"
@@ -36,7 +23,6 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
         android:hint="Enter a new address, city, neighborhood, or region to explore"
         android:id="@+id/editTextLocation" />
 
@@ -56,18 +42,18 @@
 
 
 
-</LinearLayout>
-</ScrollView>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Loading properties near you..."
         android:id="@+id/textViewLoading"
-        android:layout_gravity="center_horizontal"
         />
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/listView" />
+        <ListView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/listView"
+            />
 </LinearLayout>
+</ScrollView>
+
