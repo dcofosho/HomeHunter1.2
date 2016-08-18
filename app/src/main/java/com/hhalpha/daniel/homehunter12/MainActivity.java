@@ -13,6 +13,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -40,6 +41,9 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.IOUtils;
 import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -67,7 +71,7 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * Created by Daniel on 6/24/2016.
  */
-public class MainActivity extends Activity implements OnMapReadyCallback, AdapterView.OnItemClickListener {
+public class MainActivity extends Activity implements OnMapReadyCallback, AdapterView.OnItemClickListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     //declarations
     String profileName, loginMethod,email;
     Boolean registered,usingGps,gettingPropLocation;
@@ -82,16 +86,26 @@ public class MainActivity extends Activity implements OnMapReadyCallback, Adapte
     ListView listView;
     ArrayList<String> metadataArrayList;
     ArrayList<String> addresses;
-
+    Location mLastLocation;
     AmazonS3 s3;
     TransferUtility transferUtility;
     CognitoCachingCredentialsProvider credentialsProvider;
     private ScrollView scrollView;
     private GoogleMap mMap;
+    GoogleApiClient mGoogleApiClient;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // Create an instance of GoogleAPIClient.
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
+        setupMap();
         propertyListEntries = new ArrayList<PropertyListEntry>();
         metadataArrayList=new ArrayList<String>();
         usingGps=true;
@@ -208,6 +222,34 @@ public class MainActivity extends Activity implements OnMapReadyCallback, Adapte
         i.putExtra("bundle",bundle);
         startActivity(i);
     }
+    protected void onStart() {
+        mGoogleApiClient.connect();
+        super.onStart();
+    }
+
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        try {
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    mGoogleApiClient);
+        }catch(SecurityException e) {
+            e.printStackTrace();
+        }
+        if (mLastLocation != null) {
+            lat=mLastLocation.getLatitude();
+            lng=mLastLocation.getLongitude();
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
     //clear registration info
     public void clear (View v){
         SharedPreferences.Editor editor = preferences.edit();
@@ -240,33 +282,15 @@ public class MainActivity extends Activity implements OnMapReadyCallback, Adapte
             e.printStackTrace();
         }
         if(usingGps) {
-            // Get LocationManager object from System Service LOCATION_SERVICE
-            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-            // Create a criteria object to retrieve provider
-            Criteria criteria = new Criteria();
-
-            // Get the name of the best provider
-            String provider = locationManager.getBestProvider(criteria, true);
             try {
-                // Get Current Location
-                myLocation = locationManager.getLastKnownLocation(provider);
-            } catch (SecurityException e) {
+                mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                        mGoogleApiClient);
+            }catch(SecurityException e) {
                 e.printStackTrace();
             }
-            try {
-                //set map type
-                map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-
-                // Get latitude of the current location
-                lat = myLocation.getLatitude();
-
-                // Get longitude of the current location
-                lng = myLocation.getLongitude();
-
-
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (mLastLocation != null) {
+                lat=mLastLocation.getLatitude();
+                lng=mLastLocation.getLongitude();
             }
 
 
@@ -287,6 +311,12 @@ public class MainActivity extends Activity implements OnMapReadyCallback, Adapte
         textViewLoading.setText("");
 
     }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
     //async task for getting location from address string
     private class latLngFromAddressTask extends AsyncTask<String, Void, String[]> {
 
@@ -500,4 +530,8 @@ public class MainActivity extends Activity implements OnMapReadyCallback, Adapte
     public static double haversin(double val) {
         return Math.pow(Math.sin(val / 2), 2);
     }
+
+
+
+
 }
