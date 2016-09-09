@@ -392,9 +392,12 @@ public class CustomDialogClass extends Dialog implements
                     DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
                     PaginatedScanList<Timeslot> result = mapper.scan(Timeslot.class, scanExpression);
                     for (int i = 0; i < result.size(); i++) {
-                        if (result.get(i).getTime().split("@")[1].contains(address.replace("[", "").replace("]", "").replace("+", "").replace(",", ""))) {
+                        if (result.get(i).getTime().contains(address.replace("[", "").replace("]", "").replace("+", "").replace(",", ""))) {
                             Log.v("_dan custdialog result", result.get(i).getTime().split("@")[1]);
+                            Log.v("_dan cust dialog date",date.toString());
+                            Log.v("_dan cust dia resdate",result.get(i).getTime());
                             appointment.setHost(result.get(i).getHost() + "@" + prefs.getString("profileName", ""));
+                            //appointment.setTime(date.replace("[","")+"@"+result.get(i).getTime().split("@")[1])
                             appointment.setTime(result.get(i).getTime());
                             timeslot = result.get(i);
                             myHost=timeslot.getHost().split("@")[0];

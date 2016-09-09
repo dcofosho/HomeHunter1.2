@@ -424,11 +424,11 @@ public class ScheduleActivity extends AppCompatActivity {
                 for (int z = 0; z < confAppts.size(); z++) {
 //                    statusList.add("confirmed");
                     apptIndex = z;
-                    Log.v("_dan confAppts" + z, confAppts.get(z).toString());
-                    Log.v("dan dayview get d ate", dayView.getDate().toString());
+//                    Log.v("_dan confAppts" + z, confAppts.get(z).toString());
+//                    Log.v("dan dayview get d ate", dayView.getDate().toString());
                     if (confAppts.get(z).toString().replace("[", "").replace("]", "").contains(dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2])) {
 //                        confirmed=true;
-                        Log.v("_dan deco conf"+appts.get(z).toString().replace("[", "").replace("]", ""),dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2]);
+                        Log.v("_dan deco conf"+confAppts.get(z).toString().replace("[", "").replace("]", ""),dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2]);
                         numConfAppts++;
                         dayView.setBackgroundColor(Color.parseColor("#00FF00"));
                     }
@@ -443,9 +443,10 @@ public class ScheduleActivity extends AppCompatActivity {
                         public void onClick(View v) {
                             try{
                                 for(int x=0;x<dates.toString().split(",").length;x++){
-                                    Log.v("_dan sched dates",dates.toString().split(",")[x]);
-                                    Log.v("_dan sched dayview",dayView.getDate().toString());
+
                                     if(dates.toString().split(",")[x].contains(dayView.getDate().toString().split(" ")[0]+" "+dayView.getDate().toString().split(" ")[1]+" "+dayView.getDate().toString().split(" ")[2])&&!dateArrayList.toString().contains(dayView.getDate().toString().split(" ")[3])){
+//                                        Log.v("_dan sched dates",dates.toString().split(",")[x]);
+//                                        Log.v("_dan sched dayview",dayView.getDate().toString());
                                         dateArrayList.add(dates.toString().split(",")[x]);
                                     }
                                 }
@@ -455,8 +456,10 @@ public class ScheduleActivity extends AppCompatActivity {
                             }
                             try{
                                 for(int x=0;x<appts.toString().split(",").length;x++){
-                                    Log.v("_dan sched appts",appts.toString().split(",")[x]);
+
                                     if(appts.toString().split(",")[x].contains(dayView.getDate().toString().split(" ")[0]+" "+dayView.getDate().toString().split(" ")[1]+" "+dayView.getDate().toString().split(" ")[2])&&!apptArrayList.toString().contains(dayView.getDate().toString().split(" ")[3])){
+//                                        Log.v("_dan sched appts",appts.toString().split(",")[x]);
+//                                        Log.v("_dan sched dayview",dayView.getDate().toString());
                                         apptArrayList.add(appts.toString().split(",")[x]);
 //                                        requested=true;
                                     }
@@ -467,8 +470,10 @@ public class ScheduleActivity extends AppCompatActivity {
                             }
                             try{
                                 for(int x=0;x<confAppts.toString().split(",").length;x++){
-                                    Log.v("_dan sched conf appts",confAppts.toString().split(",")[x]);
+
                                     if(confAppts.toString().split(",")[x].contains(dayView.getDate().toString().split(" ")[0]+" "+dayView.getDate().toString().split(" ")[1]+" "+dayView.getDate().toString().split(" ")[2])&&!confApptArrayList.contains(dayView.getDate().toString().split(" ")[3])){
+//                                        Log.v("_dan sched conf appts",confAppts.toString().split(",")[x]);
+//                                        Log.v("_dan sched dayview",dayView.getDate().toString());
                                         confApptArrayList.add(confAppts.toString().split(",")[x]);
 //                                        confirmed=true;
                                     }
@@ -650,7 +655,7 @@ public class ScheduleActivity extends AppCompatActivity {
             PaginatedScanList<Appointment> result = mapper.scan(Appointment.class, scanExpression);
             for(int i=0;i<result.size();i++) {
                 try{
-                    if(result.get(i).getTime().split("@")[1].contains(address.replace("[","").replace("]","").replace("+","").replace(",",""))) {
+                    if(result.get(i).getTime().contains(address.replace("[","").replace("]","").replace("+","").replace(",",""))) {
                         appts.add(new SimpleDateFormat("EEE MMM dd hh:mm a yyyy", Locale.US).parse(result.get(i).getTime().split("@")[0]));
                     }
                 }catch (Exception e){
