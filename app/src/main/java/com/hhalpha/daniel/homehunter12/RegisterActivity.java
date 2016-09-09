@@ -49,6 +49,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.internal.Platform;
+
 /**
  * Created by Daniel on 6/24/2016.
  */
@@ -98,6 +100,8 @@ public class RegisterActivity extends FragmentActivity {
                 editor.putBoolean("registered",true);
                 editor.putString("loginMethod","FB");
                 editor.putString("profileName",profile.getName());
+                editor.putString("phoneNum", ContactsContract.CommonDataKinds.Phone.NUMBER);
+                Log.v("_dan phonenum",ContactsContract.CommonDataKinds.Phone.NUMBER);
                 editor.apply();
                 Intent i = new Intent(RegisterActivity.this, RegisterActivity2.class);
                 Bundle bundle = new Bundle();

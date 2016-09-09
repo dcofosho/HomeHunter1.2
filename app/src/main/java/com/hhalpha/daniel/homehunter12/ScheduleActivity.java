@@ -132,17 +132,17 @@ public class ScheduleActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_schedule);
-        Twilio.initialize(getApplicationContext(), new Twilio.InitListener() {
-            @Override
-            public void onInitialized() {
-
-            }
-
-            @Override
-            public void onError(Exception e) {
-                e.printStackTrace();
-            }
-        });
+//        Twilio.initialize(getApplicationContext(), new Twilio.InitListener() {
+//            @Override
+//            public void onInitialized() {
+//
+//            }
+//
+//            @Override
+//            public void onError(Exception e) {
+//                e.printStackTrace();
+//            }
+//        });
         mContext=getApplicationContext();
         dates=new ArrayList<>();
         appts=new ArrayList<>();
@@ -385,8 +385,7 @@ public class ScheduleActivity extends AppCompatActivity {
         }
 
         new retrieveTask().execute();
-        new retrieveApptsTask().execute();
-        new retrieveConfApptsTask().execute();
+
     }
 
     public class DaysDecorator implements DayDecorator {
@@ -404,6 +403,7 @@ public class ScheduleActivity extends AppCompatActivity {
                     if (dates.get(i).toString().replace("[", "").replace("]", "").contains(dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2])) {
 //                        statusList.add("available");
 //                        available=true;
+                        Log.v("_dan deco date"+dates.get(i).toString().replace("[", "").replace("]", ""),dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2]);
                         numSlots++;
                         dayView.setBackgroundColor(Color.parseColor("#cca7a7"));
                     }
@@ -415,6 +415,7 @@ public class ScheduleActivity extends AppCompatActivity {
                     if (appts.get(y).toString().replace("[", "").replace("]", "").contains(dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2])) {
 //                        statusList.add("requested");
 //                        requested=true;
+                        Log.v("_dan deco appt"+appts.get(y).toString().replace("[", "").replace("]", ""),dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2]);
                         numAppts++;
                         dayView.setBackgroundColor(Color.parseColor("#a7a7bb"));
                     }
@@ -424,9 +425,10 @@ public class ScheduleActivity extends AppCompatActivity {
 //                    statusList.add("confirmed");
                     apptIndex = z;
                     Log.v("_dan confAppts" + z, confAppts.get(z).toString());
-                    Log.v("dan dayview get date", dayView.getDate().toString());
+                    Log.v("dan dayview get d ate", dayView.getDate().toString());
                     if (confAppts.get(z).toString().replace("[", "").replace("]", "").contains(dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2])) {
 //                        confirmed=true;
+                        Log.v("_dan deco conf"+appts.get(z).toString().replace("[", "").replace("]", ""),dayView.getDate().toString().split(" ")[0] + " " + dayView.getDate().toString().split(" ")[1] + " " + dayView.getDate().toString().split(" ")[2]);
                         numConfAppts++;
                         dayView.setBackgroundColor(Color.parseColor("#00FF00"));
                     }
@@ -622,7 +624,11 @@ public class ScheduleActivity extends AppCompatActivity {
             return null;
         }
 
+        @Override
+        protected void onPostExecute(String s) {
+            new retrieveApptsTask().execute();
 
+        }
 
 
     }
@@ -660,7 +666,7 @@ public class ScheduleActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String s) {
-
+            new retrieveConfApptsTask().execute();
         }
 
 
