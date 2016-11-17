@@ -296,7 +296,7 @@ public class PropertyActivity extends Activity implements OnMapReadyCallback {
     }
 
     public void scheduleAppt(View v){
-        Intent i = new Intent(PropertyActivity.this,ScheduleActivity.class);
+        Intent i = new Intent(PropertyActivity.this,NewScheduleActivity2.class);
         i.putExtra("address",address);
         startActivity(i);
     }

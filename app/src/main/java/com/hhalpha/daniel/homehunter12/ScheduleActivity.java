@@ -437,7 +437,8 @@ public class ScheduleActivity extends AppCompatActivity {
 
                 //
                 if(numSlots>0||numAppts>0||numConfAppts>0) {
-                    dayView.setText(dayView.getDate().toString().split(" ")[2]+"\n"+numConfAppts + " appointments confirmed!"+ "\n"+numSlots + " timeslots set as available" + "\n" + numAppts + " timeslots awaiting confirmation");
+                    //
+                    // dayView.setText(dayView.getDate().toString().split(" ")[2]+"\n"+numConfAppts + " appointments confirmed!"+ "\n"+numSlots + " timeslots set as available" + "\n" + numAppts + " timeslots awaiting confirmation");
                     dayView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
