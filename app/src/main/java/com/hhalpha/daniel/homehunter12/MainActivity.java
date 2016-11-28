@@ -125,7 +125,11 @@ public class MainActivity extends Activity implements OnMapReadyCallback, Adapte
                 Regions.US_EAST_1 // Region
         );
         Map<String, String> logins = new HashMap<String, String>();
-        logins.put("graph.facebook.com", AccessToken.getCurrentAccessToken().getToken());
+        try {
+            logins.put("graph.facebook.com", AccessToken.getCurrentAccessToken().getToken());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         credentialsProvider.setLogins(logins);
         s3 = new AmazonS3Client(credentialsProvider);
         // Set the region of your S3 bucket
@@ -291,23 +295,24 @@ public class MainActivity extends Activity implements OnMapReadyCallback, Adapte
             if (mLastLocation != null) {
                 lat=mLastLocation.getLatitude();
                 lng=mLastLocation.getLongitude();
+                try{
+                    LatLng latLng = new LatLng(lat, lng);
+                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                try {
+                    map.setMyLocationEnabled(true);
+                }catch (SecurityException e){
+                    Log.v("_dan mapsec", e.getMessage());
+                }
             }
 
 
 
         }
 
-        try{
-            LatLng latLng = new LatLng(lat, lng);
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            map.setMyLocationEnabled(true);
-        }catch (SecurityException e){
-            Log.v("_dan mapsec", e.getMessage());
-        }
+
         textViewLoading.setText("");
 
     }

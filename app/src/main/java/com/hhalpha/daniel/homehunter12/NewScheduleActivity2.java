@@ -87,26 +87,30 @@ public class NewScheduleActivity2 extends Activity {
         }catch (Exception e){
             e.printStackTrace();
         }
-        preferences= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        profile= preferences.getString("profileName","");
-        new retrieveTimeSlots().execute();
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getApplicationContext(),
-                R.array.Hours, android.R.layout.simple_spinner_item);
+        try {
+            preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            profile = preferences.getString("profileName", "");
+            new retrieveTimeSlots().execute();
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getApplicationContext(),
+                    R.array.Hours, android.R.layout.simple_spinner_item);
 // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 // Apply the adapter to the spinner
-        spinnerHours.setAdapter(adapter);
-        spinnerHours.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                hours=parent.getItemAtPosition(position).toString();
-            }
+            spinnerHours.setAdapter(adapter);
+            spinnerHours.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    hours = parent.getItemAtPosition(position).toString();
+                }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
 
-            }
-        });
+                }
+            });
+        }catch(Exception e){
+            e.printStackTrace();
+        }
 
     }
 
