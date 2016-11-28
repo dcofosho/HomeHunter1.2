@@ -91,36 +91,18 @@ public class NewScheduleActivity2 extends Activity {
             preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             profile = preferences.getString("profileName", "");
             new retrieveTimeSlots().execute();
-            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getApplicationContext(),
-                    R.array.Hours, android.R.layout.simple_spinner_item);
-// Specify the layout to use when the list of choices appears
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-// Apply the adapter to the spinner
-            spinnerHours.setAdapter(adapter);
-            spinnerHours.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    hours = parent.getItemAtPosition(position).toString();
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-
-                }
-            });
         }catch(Exception e){
             e.printStackTrace();
         }
-
     }
 
-    public void createAvailableTimeSlot(View v){
-        txt_dia.setText(address+hours+":"+mins+" "+amPm+" "+day+" "+month+" "+year+" "+profile);
-        //create a map to store user metadata
-        showing.setAddress(address);
-        showing.setInfoString("Available "+hours+":"+mins+" "+amPm+" "+day+" "+month+" "+year+" "+profile);
-        new timeSlotTask().execute(showing);
-    }
+//    public void createAvailableTimeSlot(View v){
+//        txt_dia.setText(address+hours+":"+mins+" "+amPm+" "+day+" "+month+" "+year+" "+profile);
+//        //create a map to store user metadata
+//        showing.setAddress(address);
+//        showing.setInfoString("Available "+hours+":"+mins+" "+amPm+" "+day+" "+month+" "+year+" "+profile);
+//        new timeSlotTask().execute(showing);
+//    }
 
     public class timeSlotTask extends AsyncTask<Showing,Integer,String>{
 
