@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -24,21 +25,23 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.facebook.AccessToken;
+import com.facebook.FacebookSdk;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+
 
 /**
  * Created by Daniel on 10/12/2016.
  */
 
 public class NewScheduleActivity2 extends Activity {
-    Button yes,btn_delete;
-    TextView txt_dia;
-    Spinner spinnerHours, spinnerMinutes, spinnerMonths, spinnerDays, spinnerYears;
-    String hours, mins, oldHours,oldMins, date, address, day,month,year;
+
+    String address;
     DynamoDBMapper mapper;
     AmazonDynamoDB dynamoDB;
     AmazonDynamoDBClient ddbClient;
@@ -47,11 +50,7 @@ public class NewScheduleActivity2 extends Activity {
     Timeslot timeslot;
     CheckBox checkBoxAM, checkBoxPM;
     String amPm,profile;
-    Boolean available, requested, confirmed,edit,deleting;
-    int clicks;
-    Appointment appointment;
-    ConfirmedAppointment confAppt;
-    Boolean confirming;
+
     Bundle bundle;
     SharedPreferences preferences;
     Showing showing;
@@ -66,15 +65,7 @@ public class NewScheduleActivity2 extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_newschedule2);
-        numShowings=0;
-        address=getIntent().getExtras().getString("address");
-        showing=new Showing();
-        showings=new ArrayList<Showing>();
-        timeSlots=new ArrayList<String>();
-        timeSlotAdapter=new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, timeSlots);
-        listView = (ListView) findViewById(R.id.listView);
-        listView.setAdapter(timeSlotAdapter);
-
+        FacebookSdk.sdkInitialize(getApplicationContext());
         try{
             credentialsProvider = new CognitoCachingCredentialsProvider(
                     getApplicationContext(),
@@ -87,6 +78,49 @@ public class NewScheduleActivity2 extends Activity {
         }catch (Exception e){
             e.printStackTrace();
         }
+        numShowings=0;
+        address=getIntent().getExtras().getString("address");
+        showing=new Showing();
+        showings=new ArrayList<Showing>();
+        timeSlots=new ArrayList<String>();
+        timeSlotAdapter=new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, timeSlots);
+        listView = (ListView) findViewById(R.id.listView);
+        listView.setAdapter(timeSlotAdapter);
+        listView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                try{
+                    Log.v("_dan item selected", listView.getItemAtPosition(position).toString());
+                    bundle.putString("address",listView.getItemAtPosition(position).toString());
+                    RequestShowingDialog dia = new RequestShowingDialog(NewScheduleActivity2.this,bundle);
+                    dia.show();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                listView.setSelection(position);
+                try{
+                    Log.v("_dan item selected", address);
+                    bundle=new Bundle();
+                    bundle.putString("address",address);
+                    RequestShowingDialog dia = new RequestShowingDialog(NewScheduleActivity2.this,bundle);
+                    dia.show();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
+
+
         try {
             preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             profile = preferences.getString("profileName", "");
