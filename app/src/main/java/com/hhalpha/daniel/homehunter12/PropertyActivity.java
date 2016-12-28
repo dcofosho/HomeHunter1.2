@@ -65,11 +65,10 @@ public class PropertyActivity extends Activity implements OnMapReadyCallback {
     Bundle bundle;
     List<String> arrayList;
     private CognitoCachingCredentialsProvider credentialsProvider;
-    CognitoSyncManager syncClient;
+
     AmazonS3 s3;
     TransferUtility transferUtility;
-    DynamoDBMapper mapper;
-    AmazonDynamoDB dynamoDB;
+
     ImageView imageView5, imageView6, imageView7, imageView8;
     File pic1, pic2, pic3, pic4;
     Double lat, lng;

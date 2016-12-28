@@ -112,6 +112,7 @@ public class NewScheduleActivity2 extends Activity {
                     Log.v("_dan item selected", address);
                     bundle=new Bundle();
                     bundle.putString("address",address);
+                    bundle.putString("date",listView.getItemAtPosition(position).toString());
                     RequestShowingDialog dia = new RequestShowingDialog(NewScheduleActivity2.this,bundle);
                     dia.show();
                 }catch (Exception e){
@@ -169,7 +170,8 @@ public class NewScheduleActivity2 extends Activity {
                 DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
                 PaginatedScanList<Showing> result = mapper.scan(Showing.class, scanExpression);
                 for(int i=0;i<result.size();i++) {
-                    if (result.get(i).getInfoString().contains(profile)&&result.get(i).getAddress().contains(address)){
+                    //populate listview with showing timeslots for the selected address
+                    if (result.get(i).getAddress().contains(address)){
                         showings.add(result.get(i));
                         timeSlots.add(result.get(i).getInfoString());
                         numShowings++;

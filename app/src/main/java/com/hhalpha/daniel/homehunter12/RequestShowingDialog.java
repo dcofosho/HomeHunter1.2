@@ -3,7 +3,10 @@ package com.hhalpha.daniel.homehunter12;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -18,6 +21,9 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.ResponseMetadata;
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.mobileconnectors.cognito.CognitoSyncManager;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBScanExpression;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.PaginatedScanList;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -66,6 +72,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.facebook.FacebookSdk.getApplicationContext;
+
 /**
  * Created by Daniel on 7/20/2016.
  */
@@ -73,19 +81,24 @@ public class RequestShowingDialog extends Dialog implements
         View.OnClickListener {
 
     public Activity c;
-    public Button yes;
-    String date, address;
-    AmazonDynamoDB dynamoDB;
+    public Button buttonRequest;
+    public TextView textViewRequest;
+    String date, address, profile;
+    AmazonDynamoDBClient ddbClient;
     CognitoCachingCredentialsProvider credentialsProvider;
     ListView list;
     Bundle bundle;
+    DynamoDBMapper mapper;
+    AmazonDynamoDB dynamoDB;
+    CognitoSyncManager syncClient;
+    SharedPreferences preferences;
     public RequestShowingDialog(Activity a, Bundle args) {
         super(a);
         this.c = a;
         this.bundle=args;
         try {
             address = bundle.getString("address");
-
+            date=bundle.getString("date");
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -97,8 +110,19 @@ public class RequestShowingDialog extends Dialog implements
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.requestdialog1);
+        buttonRequest=(Button)findViewById(R.id.buttonRequest);
+        textViewRequest=(TextView)findViewById(R.id.textViewRequest);
+        buttonRequest.setOnClickListener(this);
         FacebookSdk.sdkInitialize(getContext());
+        try {
+            preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            profile = preferences.getString("profileName", "");
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         try{
+            //set text view to ask "Do you want to request this time slot?" and show the date/time
+            textViewRequest.setText("Do you want to request this time slot?"+"\n"+date.split(" ")[1]+" "+date.split(" ")[2]+" "+date.split(" ")[3]+" "+date.split(" ")[4]+" "+date.split(" ")[5]);
             credentialsProvider = new CognitoCachingCredentialsProvider(
                     getContext(),
                     "us-east-1:f297743b-8f2b-4874-8bef-3ee300d8b4a3", // Identity Pool ID
@@ -110,6 +134,7 @@ public class RequestShowingDialog extends Dialog implements
         }catch (Exception e){
             e.printStackTrace();
         }
+
 
 
 
@@ -327,8 +352,47 @@ public class RequestShowingDialog extends Dialog implements
 
     @Override
     public void onClick(View v) {
-
+        //textViewRequest.setText("Go");
+        new resquestTask().execute();
     }
 
+    public class resquestTask extends AsyncTask<String,Integer,String> {
 
+        @Override
+        protected String doInBackground(String... params) {
+            syncClient = new CognitoSyncManager(
+                    getApplicationContext(),
+                    Regions.US_EAST_1, // Region
+                    credentialsProvider);
+            credentialsProvider.refresh();
+            ddbClient = new AmazonDynamoDBClient(credentialsProvider);
+            mapper = new DynamoDBMapper(ddbClient);
+            try{
+                DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
+                PaginatedScanList<Showing> result = mapper.scan(Showing.class, scanExpression);
+                for(int i=0;i<result.size();i++) {
+                    if (result.get(i).getInfoString().contains(date)&&result.get(i).getAddress().contains(address)){
+                        //make updated showing set to "Requested" instead of "Available"
+                        Showing updatedShowing=new Showing();
+                        updatedShowing.setAddress(address);
+                        updatedShowing.setInfoString(date.replace("Available","Requested")+" "+profile);
+                        //save updated showing
+                        mapper.save(updatedShowing);
+                        //delete old showing
+                        mapper.delete(result.get(i));
+                        //break for loop
+                        //break;
+                    }
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            dismiss();
+        }
+    }
 }
