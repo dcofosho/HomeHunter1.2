@@ -1,10 +1,19 @@
 package com.hhalpha.daniel.homehunter12;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
+import android.telephony.SmsManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -15,6 +24,7 @@ import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.mobileconnectors.cognito.CognitoSyncManager;
@@ -49,7 +59,7 @@ public class NewScheduleActivity2 extends Activity {
     CognitoSyncManager syncClient;
     Timeslot timeslot;
     CheckBox checkBoxAM, checkBoxPM;
-    String amPm,profile;
+    String amPm,profile,phoneNum;
 
     Bundle bundle;
     SharedPreferences preferences;
@@ -65,8 +75,12 @@ public class NewScheduleActivity2 extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_newschedule2);
+
         FacebookSdk.sdkInitialize(getApplicationContext());
+
         try{
+            TelephonyManager tMgr = (TelephonyManager)getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+            phoneNum = tMgr.getLine1Number();
             credentialsProvider = new CognitoCachingCredentialsProvider(
                     getApplicationContext(),
                     "us-east-1:f297743b-8f2b-4874-8bef-3ee300d8b4a3", // Identity Pool ID
@@ -114,6 +128,21 @@ public class NewScheduleActivity2 extends Activity {
                     bundle.putString("address",address);
                     bundle.putString("date",listView.getItemAtPosition(position).toString());
                     RequestShowingDialog dia = new RequestShowingDialog(NewScheduleActivity2.this,bundle);
+                    dia.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                        @Override
+                        public void onDismiss(DialogInterface dialog) {
+                            try {
+                                Log.v("_danDis", dialog.getClass().getDeclaredField("requested").toString());
+                                if(preferences.getBoolean("requested",false)){
+                                    Log.v("danDisReq","Success");
+                                    Log.v("danDisReq2",preferences.getString("myRequestedDate","000"));
+                                    sendSMS(preferences.getString("myRequestedDate","000").split(" ")[preferences.getString("myRequestedDate","000").split(" ").length-1],"HH test1");
+                                }
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                        }
+                    });
                     dia.show();
                 }catch (Exception e){
                     e.printStackTrace();
@@ -130,6 +159,8 @@ public class NewScheduleActivity2 extends Activity {
             e.printStackTrace();
         }
     }
+
+
 
 //    public void createAvailableTimeSlot(View v){
 //        txt_dia.setText(address+hours+":"+mins+" "+amPm+" "+day+" "+month+" "+year+" "+profile);
@@ -188,5 +219,66 @@ public class NewScheduleActivity2 extends Activity {
             timeSlotAdapter.notifyDataSetChanged();
 
         }
+    }
+    public void sendSMS(String phoneNumber, String message) {
+        String SENT = "SMS_SENT";
+        String DELIVERED = "SMS_DELIVERED";
+
+        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,
+                new Intent(SENT), 0);
+
+        PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0,
+                new Intent(DELIVERED), 0);
+
+        //---when the SMS has been sent---
+        registerReceiver(new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (getResultCode())
+                {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(getBaseContext(), "SMS sent",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                        Toast.makeText(getBaseContext(), "Generic failure",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NO_SERVICE:
+                        Toast.makeText(getBaseContext(), "No service",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NULL_PDU:
+                        Toast.makeText(getBaseContext(), "Null PDU",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_RADIO_OFF:
+                        Toast.makeText(getBaseContext(), "Radio off",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }, new IntentFilter(SENT));
+
+        //---when the SMS has been delivered---
+        registerReceiver(new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (getResultCode())
+                {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(getBaseContext(), "SMS delivered",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Toast.makeText(getBaseContext(), "SMS not delivered",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }, new IntentFilter(DELIVERED));
+
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);
     }
 }

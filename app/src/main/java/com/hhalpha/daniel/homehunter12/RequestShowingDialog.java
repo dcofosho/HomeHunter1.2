@@ -2,11 +2,20 @@ package com.hhalpha.daniel.homehunter12;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Message;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
+import android.telephony.SmsManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -14,6 +23,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -83,7 +93,7 @@ public class RequestShowingDialog extends Dialog implements
     public Activity c;
     public Button buttonRequest;
     public TextView textViewRequest;
-    String date, address, profile;
+    String date, address, profile,phoneNum;
     AmazonDynamoDBClient ddbClient;
     CognitoCachingCredentialsProvider credentialsProvider;
     ListView list;
@@ -92,6 +102,8 @@ public class RequestShowingDialog extends Dialog implements
     AmazonDynamoDB dynamoDB;
     CognitoSyncManager syncClient;
     SharedPreferences preferences;
+    Boolean requested;
+    SharedPreferences.Editor editor;
     public RequestShowingDialog(Activity a, Bundle args) {
         super(a);
         this.c = a;
@@ -110,16 +122,21 @@ public class RequestShowingDialog extends Dialog implements
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.requestdialog1);
+        requested=false;
         buttonRequest=(Button)findViewById(R.id.buttonRequest);
         textViewRequest=(TextView)findViewById(R.id.textViewRequest);
-        buttonRequest.setOnClickListener(this);
         FacebookSdk.sdkInitialize(getContext());
         try {
             preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             profile = preferences.getString("profileName", "");
-        }catch(Exception e){
+            editor = preferences.edit();
+            TelephonyManager tMgr = (TelephonyManager)getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+            phoneNum = tMgr.getLine1Number();
+            editor.putString("myPhoneNum",phoneNum);
+        }catch (Exception e){
             e.printStackTrace();
         }
+        buttonRequest.setOnClickListener(this);
         try{
             //set text view to ask "Do you want to request this time slot?" and show the date/time
             textViewRequest.setText("Do you want to request this time slot?"+"\n"+date.split(" ")[1]+" "+date.split(" ")[2]+" "+date.split(" ")[3]+" "+date.split(" ")[4]+" "+date.split(" ")[5]);
@@ -375,11 +392,14 @@ public class RequestShowingDialog extends Dialog implements
                         //make updated showing set to "Requested" instead of "Available"
                         Showing updatedShowing=new Showing();
                         updatedShowing.setAddress(address);
-                        updatedShowing.setInfoString(date.replace("Available","Requested")+" "+profile);
+                        updatedShowing.setInfoString(date.replace("Available","Requested")+" "+profile+" "+phoneNum);
                         //save updated showing
                         mapper.save(updatedShowing);
                         //delete old showing
                         mapper.delete(result.get(i));
+
+                        requested=true;
+
                         //break for loop
                         //break;
                     }
@@ -392,7 +412,16 @@ public class RequestShowingDialog extends Dialog implements
 
         @Override
         protected void onPostExecute(String s) {
-            dismiss();
+            try {
+                editor.putBoolean("requested",requested);
+                editor.putString("myRequestedDate",date);
+                editor.commit();
+                dismiss();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
         }
     }
+
 }
